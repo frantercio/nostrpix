@@ -1,1021 +1,2876 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="h-full bg-slate-100">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#e6a100">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>NostrPix — Carteira Lightning & Pix Acessível</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#00A859" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss: https: data: blob:;">
+  <title>ZapPix & NostrPix — Pague & Converse S.A.</title>
+  <link rel="manifest" href="manifest.json">
 
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/825/825590.png">
-
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- FontAwesome 6 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
-
-    <!-- QR Code Generator & Scanner -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-
-    <!-- nostr-tools v2.7.0 (NIP-47, NIP-04, NIP-19) -->
-    <script src="https://cdn.jsdelivr.net/npm/nostr-tools@2.7.0/lib/nostr.bundle.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: { 50:'#fffbe6', 400:'#fadb14', 500:'#e6a100', 600:'#d48800' },
-                        pix: '#32bcad',
-                        nostr: '#8e44ad'
-                    }
-                }
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            zappix: {
+              green: '#00A859',
+              darkgreen: '#007A40',
+              lightgreen: '#E6F6EE',
+              yellow: '#FFD600',
+              chatbg: '#E5DDD5',
+              bubblein: '#FFFFFF',
+              bubbleout: '#DCF8C6'
+            },
+            nostr: {
+              purple: '#8e44ad',
+              dark: '#5e2a75',
+              amber: '#e6a100'
             }
+          }
         }
-    </script>
-    <style>
-        body { font-family: system-ui, -apple-system, sans-serif; background-color: #0d0f12; color: #f3f4f6; touch-action: manipulation; }
-        .accessible-btn { min-height: 3.5rem; font-size: 1.15rem; font-weight: 800; }
-        button { user-select: none; -webkit-user-select: none; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 9999px; }
-    </style>
+      }
+    }
+  </script>
+
+  <!-- FontAwesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  <!-- QR Code & Scanner & Confetti & Nostr Tools -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.jsdelivr.net/npm/nostr-tools@2.7.0/lib/nostr.bundle.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <style>
+    /* Custom Scrollbars & Accessibility Touch Styles */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    button, .touch-active { user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+    .touch-active:active { transform: scale(0.97); transition: transform 0.1s ease; }
+    .high-contrast { filter: contrast(1.15); }
+    .seu-pedro-mode { font-size: 1.15rem; }
+    .seu-pedro-mode button { min-height: 52px; font-weight: 700; }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(0, 168, 89, 0.4); }
+      50% { box-shadow: 0 0 0 12px rgba(0, 168, 89, 0); }
+    }
+    .pulse-glow { animation: pulseGlow 2s infinite; }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+  </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between">
+<body class="h-full font-sans text-slate-800 antialiased flex flex-col justify-between select-none">
 
-    <!-- HEADER PRINCIPAL -->
-    <header class="bg-gray-900 border-b-2 border-amber-500 sticky top-0 z-40 shadow-xl">
-        <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center text-gray-950 font-black text-xl shadow">⚡</div>
-                <div>
-                    <h1 class="text-xl font-extrabold tracking-wide text-amber-400">NostrPix</h1>
-                    <p class="text-xs text-gray-400 font-bold flex items-center gap-1.5">
-                        <span id="nwc-indicator" class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block animate-pulse"></span>
-                        <span id="nwc-status-label">Carteira Desconectada</span>
-                    </p>
-                </div>
-            </div>
-            <div class="flex items-center space-x-2">
-                <button onclick="openConfigModal()" aria-label="Conectar Carteira" class="p-3 bg-gray-800 hover:bg-gray-700 text-amber-400 rounded-xl border border-amber-500/40">
-                    <i class="fa-solid fa-wallet text-lg"></i>
-                </button>
-            </div>
-        </div>
+  <!-- AVISO HTTPS (se não estiver em HTTPS ou localhost) -->
+  <div id="httpsWarning" class="hidden bg-amber-100 border-b border-amber-300 text-amber-900 text-center text-xs font-bold py-1.5 px-3">
+    ⚠️ Você não está em HTTPS. Câmera, clipboard e instalação PWA podem ter restrições.
+  </div>
 
-        <!-- ENDEREÇO LIGHTNING (LUD-16) SE DISPONÍVEL -->
-        <div id="lud16-banner" class="hidden bg-purple-950/60 border-t border-purple-800/60 px-4 py-1 text-xs text-purple-200 flex justify-between items-center max-w-md mx-auto font-mono">
-            <div class="flex items-center gap-1.5 truncate">
-                <i class="fa-solid fa-bolt text-amber-400"></i>
-                <span class="text-gray-400">Endereço:</span>
-                <span id="lud16-text" class="font-bold text-amber-300 truncate">--</span>
-            </div>
-            <button onclick="copyLud16()" class="text-purple-300 hover:text-white px-2 py-0.5 rounded bg-purple-900 text-[10px] font-bold">
-                Copiar
-            </button>
-        </div>
+  <!-- FAIXA DE ESTADO & DEMO -->
+  <div id="topStatusBar" class="bg-emerald-900 text-emerald-100 text-center text-[11px] sm:text-xs font-bold py-1 px-2 tracking-wide flex items-center justify-between max-w-md mx-auto w-full">
+    <div class="flex items-center gap-1 truncate">
+      <span id="nwcStatusDot" class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-pulse"></span>
+      <span id="nwcStatusLabel" class="truncate">Modo Pix / Demonstração</span>
+    </div>
+    <div class="flex items-center gap-2 font-mono text-[10px]">
+      <span id="btcBrlRate" class="text-amber-300">1 BTC = R$ ...</span>
+    </div>
+  </div>
 
-        <!-- CÂMBIO BITCOIN / REAL AO VIVO -->
-        <div class="bg-black/60 px-4 py-1 border-t border-gray-800 text-xs text-gray-300 flex justify-between items-center max-w-md mx-auto font-mono">
-            <div class="flex items-center gap-1 text-amber-400 font-bold">
-                <i class="fa-solid fa-chart-line"></i> 1 BTC = R$ <span id="btc-brl-rate">Carregando...</span>
-            </div>
-            <div class="text-emerald-400 font-semibold" id="sats-ratio">100 Sats ≈ R$ --</div>
+  <!-- HEADER ZAPPIX -->
+  <header class="bg-zappix-green text-white shadow-md sticky top-0 z-30">
+    <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-full bg-zappix-yellow text-zappix-darkgreen font-black flex items-center justify-center text-xl shadow" aria-hidden="true">
+          ⚡
         </div>
-    </header>
-
-    <!-- BANNER DE ACESSIBILIDADE E VOZ -->
-    <div class="bg-amber-500 text-gray-950 px-4 py-2.5 shadow-md max-w-md mx-auto w-full flex items-center justify-between border-b border-amber-600">
-        <div class="flex items-center space-x-3">
-            <button onclick="startVoiceCommand()" class="w-11 h-11 rounded-full bg-gray-950 text-amber-400 flex items-center justify-center text-lg shadow-lg active:scale-95 transition">
-                <i class="fa-solid fa-microphone" id="mic-icon"></i>
-            </button>
-            <div>
-                <p class="font-black text-xs uppercase tracking-wider">Comando por Voz</p>
-                <p class="text-[11px] text-gray-950 font-bold" id="voice-status">Toque e diga: "Saldo", "Pagar" ou "Receber"</p>
-            </div>
+        <div>
+          <h1 class="font-extrabold text-lg leading-tight tracking-tight flex items-center gap-1.5">
+            ZapPix
+            <span class="bg-zappix-yellow text-zappix-darkgreen text-[10px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider">S.A.</span>
+          </h1>
+          <p class="text-xs text-emerald-100 flex items-center gap-1">
+            <span class="w-2 h-2 rounded-full bg-emerald-300 inline-block animate-ping" aria-hidden="true"></span>
+            Pague & Converse Instantâneo
+          </p>
         </div>
-        <button onclick="speakBalance()" class="p-2 bg-amber-600 hover:bg-amber-700 text-gray-950 rounded-lg font-black text-sm">
-            <i class="fa-solid fa-volume-high"></i>
+      </div>
+      
+      <div class="flex items-center space-x-2">
+        <button onclick="toggleVoiceGuide()" id="voiceToggleBtn" class="p-2 rounded-full bg-emerald-700/60 hover:bg-emerald-700 text-white text-sm" aria-label="Alternar voz guia" title="Voz Guia">
+          <i class="fa-solid fa-volume-high" aria-hidden="true"></i>
         </button>
+        <button onclick="startVoiceRecognition()" class="p-2 rounded-full bg-zappix-yellow text-zappix-darkgreen font-bold text-sm shadow hover:brightness-110" aria-label="Aperte e fale" title="Aperte e Fale">
+          <i class="fa-solid fa-microphone" aria-hidden="true"></i>
+        </button>
+        <button onclick="openModal('profileModal')" class="p-2 rounded-full bg-emerald-700/60 hover:bg-emerald-700 text-white text-sm" aria-label="Perfil e configurações" title="Configurações e Carteira">
+          <i class="fa-solid fa-user-gear" aria-hidden="true"></i>
+        </button>
+      </div>
     </div>
 
-    <!-- CORPO PRINCIPAL -->
-    <main class="max-w-md mx-auto w-full flex-grow p-4 pb-28 space-y-4">
+    <!-- BANNER LUD-16 LIGHTNING SE CONECTADO -->
+    <div id="lud16Banner" class="hidden bg-emerald-950/80 border-t border-emerald-600/50 px-4 py-1 text-xs text-emerald-200 flex justify-between items-center max-w-md mx-auto font-mono">
+      <div class="flex items-center gap-1.5 truncate">
+        <i class="fa-solid fa-bolt text-zappix-yellow"></i>
+        <span class="text-emerald-300">Lightning Address:</span>
+        <span id="lud16Text" class="font-bold text-white truncate">--</span>
+      </div>
+      <button onclick="copyLud16()" class="text-zappix-darkgreen bg-zappix-yellow hover:brightness-110 px-2 py-0.5 rounded text-[10px] font-bold shadow">
+        Copiar
+      </button>
+    </div>
+  </header>
 
-        <!-- ABA 1: INÍCIO / SALDO REAL -->
-        <section id="tab-inicio" class="tab-content space-y-4">
-            <div class="bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 border-2 border-amber-500/50 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
-                <div class="flex justify-between items-start mb-2">
-                    <span class="text-xs uppercase font-extrabold text-amber-400 tracking-wider">Saldo Disponível</span>
-                    <span id="wallet-type-badge" class="px-2.5 py-0.5 bg-red-900/60 text-red-300 rounded-full text-[10px] font-bold border border-red-500/40">DESCONECTADO</span>
-                </div>
-                
-                <div class="my-3">
-                    <div class="text-4xl font-black text-white tracking-tight flex items-baseline gap-2">
-                        <span class="text-amber-400 text-2xl">R$</span>
-                        <span id="balance-brl">0,00</span>
-                    </div>
-                    <div class="text-base font-extrabold text-amber-400/90 mt-1 font-mono flex items-center gap-1.5">
-                        <i class="fa-solid fa-bolt"></i>
-                        <span id="balance-sats">0</span> satoshis
-                    </div>
-                </div>
+  <!-- CONTEÚDO PRINCIPAL (COM AS 5 ABAS) -->
+  <main class="flex-1 max-w-md w-full mx-auto bg-white shadow-lg overflow-y-auto relative pb-24">
 
-                <div class="mt-6 grid grid-cols-2 gap-3">
-                    <button onclick="switchTab('tab-pagar')" class="accessible-btn bg-amber-500 hover:bg-amber-400 text-gray-950 rounded-2xl p-3 flex items-center justify-center space-x-2 shadow-lg active:scale-95 transition">
-                        <i class="fa-solid fa-qrcode text-xl"></i>
-                        <span>PAGAR</span>
-                    </button>
-                    <button onclick="switchTab('tab-receber')" class="accessible-btn bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl p-3 flex items-center justify-center space-x-2 shadow-lg active:scale-95 transition">
-                        <i class="fa-solid fa-arrow-down-left text-xl"></i>
-                        <span>RECEBER</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 gap-3">
-                <button onclick="syncWalletBalance()" class="accessible-btn bg-gray-900 hover:bg-gray-800 border border-gray-800 text-amber-400 rounded-2xl p-4 flex items-center justify-between shadow">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-amber-500/20 rounded-xl flex items-center justify-center text-amber-400 text-lg">
-                            <i class="fa-solid fa-rotate"></i>
-                        </div>
-                        <div class="text-left">
-                            <div class="font-extrabold text-base text-white">ATUALIZAR SALDO</div>
-                            <div class="text-xs text-gray-400">Consultar carteira via Nostr NWC</div>
-                        </div>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-gray-500"></i>
-                </button>
-
-                <button onclick="openConfigModal()" class="accessible-btn bg-gray-900 hover:bg-gray-800 border border-gray-800 text-purple-400 rounded-2xl p-4 flex items-center justify-between shadow">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center text-purple-400 text-lg">
-                            <i class="fa-solid fa-link"></i>
-                        </div>
-                        <div class="text-left">
-                            <div class="font-extrabold text-base text-white">CONECTAR CARTEIRA</div>
-                            <div class="text-xs text-gray-400">Alby, Mutiny, Coinos ou Umbrel</div>
-                        </div>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-gray-500"></i>
-                </button>
-            </div>
-        </section>
-
-        <!-- ABA 2: PAGAR (LIGHTNING BOLT11 / PIX) -->
-        <section id="tab-pagar" class="tab-content hidden space-y-4">
-            <div class="bg-gray-900 border border-amber-500/40 rounded-3xl p-5 shadow-xl space-y-4">
-                <h2 class="text-lg font-black text-amber-400 flex items-center gap-2">
-                    <i class="fa-solid fa-qrcode"></i> Pagar Lightning ou Pix
-                </h2>
-
-                <!-- SCANNER DE CÂMERA -->
-                <div class="relative bg-black rounded-2xl overflow-hidden aspect-square border-2 border-gray-700 flex items-center justify-center">
-                    <video id="qr-video" class="w-full h-full object-cover hidden" playsinline muted></video>
-                    <canvas id="qr-canvas" class="hidden"></canvas>
-                    <div id="camera-placeholder" class="text-center p-6 space-y-3">
-                        <i class="fa-solid fa-camera text-4xl text-amber-500"></i>
-                        <p class="text-xs text-gray-300 font-bold">Aponte para uma fatura Lightning ou QR Pix</p>
-                        <button onclick="startCamera()" class="px-5 py-2.5 bg-amber-500 text-gray-950 font-black rounded-xl text-sm shadow">
-                            ABRIR CÂMERA
-                        </button>
-                    </div>
-                    <div id="qr-overlay" class="absolute inset-0 border-4 border-amber-400/50 rounded-2xl pointer-events-none hidden flex items-center justify-center">
-                        <div class="w-48 h-48 border-2 border-dashed border-amber-300 rounded-lg"></div>
-                    </div>
-                </div>
-
-                <!-- CAMPO MANUAL DE INVOICE -->
-                <div class="space-y-2">
-                    <label class="text-xs font-bold text-gray-400">Ou cole a Fatura Lightning (lnbc...) ou Código Pix:</label>
-                    <textarea id="invoice-input" rows="2" placeholder="lnbc... ou 000201..." class="w-full bg-gray-950 border border-gray-700 rounded-xl p-3 text-xs font-mono text-gray-200 focus:outline-none focus:border-amber-500"></textarea>
-                    <button onclick="processInputCode()" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-gray-950 font-black rounded-xl text-sm shadow">
-                        VALIDAR CÓDIGO
-                    </button>
-                </div>
-            </div>
-
-            <!-- CARD DE CONFIRMAÇÃO DE PAGAMENTO REAL -->
-            <div id="payment-confirm-card" class="bg-gray-900 border-2 border-emerald-500 rounded-3xl p-5 shadow-2xl hidden space-y-4">
-                <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-                    <h3 class="text-base font-black text-emerald-400">Confirmar Pagamento</h3>
-                    <button onclick="cancelPayment()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-                </div>
-
-                <div class="space-y-2 text-xs font-mono">
-                    <div class="bg-gray-950 p-3 rounded-xl border border-gray-800">
-                        <span class="text-gray-500 block uppercase font-bold text-[10px]">Tipo</span>
-                        <span id="parsed-type" class="text-sm font-bold text-amber-400">Bitcoin Lightning</span>
-                    </div>
-
-                    <div id="parsed-desc-box" class="bg-gray-950 p-3 rounded-xl border border-gray-800 hidden">
-                        <span class="text-gray-500 block uppercase font-bold text-[10px]">Descrição / Motivo</span>
-                        <span id="parsed-desc" class="text-xs font-bold text-gray-200 break-words">--</span>
-                    </div>
-
-                    <div class="bg-gray-950 p-3 rounded-xl border border-gray-800 flex justify-between items-center">
-                        <div>
-                            <span class="text-gray-500 block uppercase font-bold text-[10px]">Valor em Reais (Aprox.)</span>
-                            <span id="parsed-amount-brl" class="text-xl font-black text-white">R$ 0,00</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-gray-500 block uppercase font-bold text-[10px]">Valor Real em Sats</span>
-                            <span id="parsed-amount-sats" class="text-lg font-bold text-emerald-400">0 sats</span>
-                        </div>
-                    </div>
-                </div>
-
-                <button id="btn-confirm-pay" onclick="executeRealPayment()" class="accessible-btn w-full bg-emerald-500 hover:bg-emerald-400 text-gray-950 rounded-2xl font-black text-lg shadow-lg flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-bolt"></i>
-                    <span>PAGAR AGORA COM LIGHTNING</span>
-                </button>
-            </div>
-        </section>
-
-        <!-- ABA 3: RECEBER (DUAL: LIGHTNING NWC MAKE_INVOICE + PIX BRCODE) -->
-        <section id="tab-receber" class="tab-content hidden space-y-4">
-            <div class="bg-gray-900 border border-emerald-500/40 rounded-3xl p-5 shadow-xl space-y-4">
-                
-                <!-- SELETOR DE MODO: LIGHTNING OU PIX -->
-                <div class="flex bg-gray-950 p-1.5 rounded-2xl border border-gray-800 text-xs font-bold">
-                    <button onclick="setReceiveMode('lightning')" id="btn-mode-lightning" class="flex-1 py-2.5 rounded-xl bg-amber-500 text-gray-950 shadow flex items-center justify-center gap-1.5 transition">
-                        <i class="fa-solid fa-bolt"></i> Lightning (Bitcoin)
-                    </button>
-                    <button onclick="setReceiveMode('pix')" id="btn-mode-pix" class="flex-1 py-2.5 rounded-xl text-gray-400 hover:text-white flex items-center justify-center gap-1.5 transition">
-                        <i class="fa-solid fa-qrcode"></i> Pix (Reais)
-                    </button>
-                </div>
-
-                <!-- SUBFORMULÁRIO 1: RECEBER VIA LIGHTNING (MAKE_INVOICE NO NÓ REMOTO) -->
-                <div id="receive-lightning-form" class="space-y-3 text-xs">
-                    <div>
-                        <div class="flex justify-between items-center">
-                            <label class="font-bold text-gray-400">Valor em Satoshis:</label>
-                            <span id="receive-sats-to-brl" class="text-[11px] text-amber-400 font-mono font-bold">≈ R$ 0,00</span>
-                        </div>
-                        <input type="number" id="lightning-amount-sats" oninput="updateReceiveSatsPreview()" value="1000" step="100" class="w-full bg-gray-950 border border-gray-700 rounded-xl p-2.5 text-lg font-black text-amber-400 mt-1 focus:outline-none focus:border-amber-500">
-                    </div>
-                    <div>
-                        <label class="font-bold text-gray-400">Descrição / Motivo da Venda:</label>
-                        <input type="text" id="lightning-desc" placeholder="Ex: Café + Pastel" class="w-full bg-gray-950 border border-gray-700 rounded-xl p-2.5 text-sm text-gray-100 mt-1 focus:outline-none focus:border-amber-500">
-                    </div>
-
-                    <button id="btn-generate-lightning" onclick="generateLightningInvoice()" class="accessible-btn w-full bg-amber-500 hover:bg-amber-400 text-gray-950 font-black rounded-2xl shadow transition">
-                        ⚡ GERAR FATURA LIGHTNING
-                    </button>
-                </div>
-
-                <!-- SUBFORMULÁRIO 2: RECEBER VIA PIX (BRCODE) -->
-                <div id="receive-pix-form" class="hidden space-y-3 text-xs">
-                    <div>
-                        <label class="font-bold text-gray-400">Sua Chave Pix (CPF, Celular, E-mail ou Aleatória):</label>
-                        <input type="text" id="pix-my-key" placeholder="sua-chave@pix.com" class="w-full bg-gray-950 border border-gray-700 rounded-xl p-2.5 text-sm text-gray-100 font-mono mt-1 focus:outline-none focus:border-emerald-500">
-                    </div>
-                    <div>
-                        <label class="font-bold text-gray-400">Nome do Beneficiário:</label>
-                        <input type="text" id="pix-my-name" value="SEU PEDRO" class="w-full bg-gray-950 border border-gray-700 rounded-xl p-2.5 text-sm text-gray-100 mt-1 focus:outline-none focus:border-emerald-500">
-                    </div>
-                    <div>
-                        <label class="font-bold text-gray-400">Valor em Reais (R$):</label>
-                        <input type="number" id="pix-my-amount" value="10.00" step="1.00" class="w-full bg-gray-950 border border-gray-700 rounded-xl p-2.5 text-lg font-black text-emerald-400 mt-1 focus:outline-none focus:border-emerald-500">
-                    </div>
-
-                    <button onclick="generatePixBRCode()" class="accessible-btn w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl shadow transition">
-                        GERAR QR CODE PIX
-                    </button>
-                </div>
-
-                <!-- CONTAINER DO QR CODE GERADO COM DETECTOR AUTOMÁTICO DE LIQUIDAÇÃO -->
-                <div id="generated-qr-box" class="bg-white p-4 rounded-3xl text-center hidden flex-col items-center justify-center space-y-3 shadow-xl">
-                    <div class="flex items-center justify-between w-full border-b pb-2">
-                        <span id="qr-badge-type" class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
-                            Fatura Lightning
-                        </span>
-                        <span id="qr-status-indicator" class="text-[11px] font-bold text-emerald-700 flex items-center gap-1">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Aguardando Pagamento...
-                        </span>
-                    </div>
-
-                    <div id="qrcode-target" class="p-2 bg-white rounded-xl"></div>
-                    <p class="text-[10px] text-gray-800 font-mono break-all font-bold max-h-16 overflow-y-auto bg-gray-50 p-2 rounded w-full" id="generated-payload-text"></p>
-                    
-                    <div class="flex gap-2 w-full">
-                        <button onclick="copyGeneratedPayload()" class="flex-1 py-2.5 bg-gray-900 text-amber-400 font-bold text-xs rounded-xl shadow">
-                            <i class="fa-solid fa-copy"></i> Copiar Código
-                        </button>
-                        <button onclick="cancelActiveReceive()" class="py-2.5 px-4 bg-gray-200 text-gray-700 font-bold text-xs rounded-xl">
-                            Fechar
-                        </button>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-
-        <!-- ABA 4: HISTÓRICO REAL -->
-        <section id="tab-recibos" class="tab-content hidden space-y-4">
-            <div class="bg-gray-900 border border-blue-500/40 rounded-3xl p-5 shadow-xl space-y-3">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-base font-black text-blue-400 flex items-center gap-2">
-                        <i class="fa-solid fa-receipt"></i> Histórico de Transações
-                    </h2>
-                    <button onclick="clearHistory()" class="text-[11px] text-red-400 hover:underline">Limpar</button>
-                </div>
-                <div id="receipts-list" class="space-y-2 text-xs"></div>
-            </div>
-        </section>
-    </main>
-
-    <!-- NAVEGAÇÃO INFERIOR -->
-    <nav class="bg-gray-900 border-t border-gray-800 fixed bottom-0 left-0 right-0 z-40">
-        <div class="max-w-md mx-auto grid grid-cols-4 gap-1 p-2">
-            <button onclick="switchTab('tab-inicio')" id="nav-inicio" class="text-amber-400 flex flex-col items-center py-1.5 rounded-xl bg-gray-800">
-                <i class="fa-solid fa-house text-lg mb-0.5"></i>
-                <span class="text-[10px] font-bold">Início</span>
-            </button>
-            <button onclick="switchTab('tab-pagar')" id="nav-pagar" class="text-gray-400 flex flex-col items-center py-1.5 rounded-xl">
-                <i class="fa-solid fa-qrcode text-lg mb-0.5"></i>
-                <span class="text-[10px] font-bold">Pagar</span>
-            </button>
-            <button onclick="switchTab('tab-receber')" id="nav-receber" class="text-gray-400 flex flex-col items-center py-1.5 rounded-xl">
-                <i class="fa-solid fa-arrow-down-left text-lg mb-0.5"></i>
-                <span class="text-[10px] font-bold">Receber</span>
-            </button>
-            <button onclick="switchTab('tab-recibos')" id="nav-recibos" class="text-gray-400 flex flex-col items-center py-1.5 rounded-xl">
-                <i class="fa-solid fa-receipt text-lg mb-0.5"></i>
-                <span class="text-[10px] font-bold">Recibos</span>
-            </button>
+    <!-- ABA 1: INÍCIO (HOME) -->
+    <section id="view-home" class="view-panel p-4 space-y-4">
+      
+      <!-- CARTÃO DE SALDO DUPLO (PIX & LIGHTNING) -->
+      <div class="bg-gradient-to-br from-zappix-green to-emerald-800 rounded-2xl p-5 text-white shadow-xl relative overflow-hidden">
+        <div class="absolute -right-6 -bottom-6 opacity-15 text-8xl text-white" aria-hidden="true">
+          <i class="fa-solid fa-bolt"></i>
         </div>
-    </nav>
-
-    <!-- MODAL DE CONFIGURAÇÃO NWC -->
-    <div id="modal-config" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-gray-900 border border-amber-500 rounded-3xl max-w-md w-full p-5 space-y-4">
-            <div class="flex items-center justify-between border-b border-gray-800 pb-2">
-                <h3 class="text-base font-black text-amber-400 flex items-center gap-2">
-                    <i class="fa-solid fa-wallet"></i> Conectar Carteira Lightning
-                </h3>
-                <button onclick="closeConfigModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-
-            <div class="text-xs text-gray-300 space-y-2">
-                <p>Cole a conexão <strong>Nostr Wallet Connect (NWC)</strong> da sua carteira (Alby Hub, Mutiny, Umbrel ou Coinos):</p>
-                <textarea id="nwc-uri-input" rows="3" placeholder="nostr+walletconnect://<wallet_pubkey>?relay=wss://...&secret=..." class="w-full bg-gray-950 border border-gray-700 rounded-xl p-2.5 text-xs font-mono text-gray-200 focus:outline-none focus:border-amber-500"></textarea>
-            </div>
-
-            <div class="flex gap-2">
-                <button onclick="saveAndConnectNWC()" class="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-gray-950 font-black rounded-xl text-xs shadow">
-                    CONECTAR E SINCRONIZAR
-                </button>
-                <button onclick="disconnectNWC()" class="py-3 px-4 bg-gray-800 text-red-400 font-bold rounded-xl text-xs">
-                    DESCONECTAR
-                </button>
-            </div>
+        
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-xs uppercase tracking-wider font-medium text-emerald-200">Saldo ZapPix Conta Corrente</span>
+          <button onclick="toggleBalanceVisibility()" class="text-emerald-200 hover:text-white text-sm" aria-label="Mostrar ou ocultar saldo">
+            <i id="balanceEyeIcon" class="fa-solid fa-eye" aria-hidden="true"></i>
+          </button>
         </div>
+
+        <div class="flex items-baseline space-x-2 mb-3">
+          <span class="text-lg font-bold text-zappix-yellow">R$</span>
+          <span id="homeBalanceDisplay" class="text-3xl sm:text-4xl font-extrabold tracking-tight" aria-live="polite">0,00</span>
+        </div>
+
+        <!-- SALDO LIGHTNING (SE NWC CONECTADO) -->
+        <div id="lightningBalanceBox" class="mb-4 bg-emerald-900/60 rounded-xl p-2.5 border border-emerald-500/40 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] uppercase font-bold text-amber-300 flex items-center gap-1">
+              <i class="fa-solid fa-bolt"></i> Saldo Bitcoin Lightning
+            </span>
+            <div class="text-lg font-black text-white">
+              <span id="homeSatsDisplay">0</span> <span class="text-xs font-semibold text-emerald-200">sats</span>
+              <span id="homeSatsBrlEquivalent" class="text-xs text-amber-300 font-mono ml-1.5">(R$ 0,00)</span>
+            </div>
+          </div>
+          <button onclick="refreshNwcBalance()" class="p-2 bg-emerald-800 hover:bg-emerald-700 text-amber-300 rounded-lg text-xs font-bold" title="Atualizar Saldo Lightning">
+            <i class="fa-solid fa-arrows-rotate" id="refreshBalanceIcon"></i>
+          </button>
+        </div>
+
+        <!-- BOTÕES MANDAR E DEPOSITAR -->
+        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-emerald-600/50">
+          <button onclick="openPixModal()" class="bg-zappix-yellow text-zappix-darkgreen font-extrabold py-2.5 px-3 rounded-xl flex items-center justify-center space-x-2 shadow touch-active hover:bg-yellow-300">
+            <i class="fa-solid fa-paper-plane text-lg" aria-hidden="true"></i>
+            <span>MANDAR PIX</span>
+          </button>
+          <button onclick="openDepositModal()" class="bg-white/20 hover:bg-white/30 text-white font-bold py-2.5 px-3 rounded-xl flex items-center justify-center space-x-2 backdrop-blur-sm touch-active">
+            <i class="fa-solid fa-qrcode text-lg" aria-hidden="true"></i>
+            <span>RECEBER / DEPOSITAR</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- BANNER MODO SEU PEDRO (ACESSIBILIDADE SÊNIOR) -->
+      <div id="seniorAccessibilityBanner" class="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center justify-between shadow-sm">
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-full bg-amber-200 text-amber-800 flex items-center justify-center text-lg" aria-hidden="true">
+            <i class="fa-solid fa-glasses"></i>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-amber-900">Modo Seu Pedro (Letras Grandes)</h4>
+            <p class="text-[11px] text-amber-700">Aumenta botões e textos para facilidade total</p>
+          </div>
+        </div>
+        <button onclick="toggleSeuPedroMode()" id="seuPedroBtn" class="bg-amber-600 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow">Ativar</button>
+      </div>
+
+      <!-- 4 BOTÕES RÁPIDOS (PAGAR, SCANNER, MAQUININHA, FIADO) -->
+      <div class="grid grid-cols-4 gap-3 text-center">
+        <button onclick="openPixModal()" class="flex flex-col items-center p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200/80 transition touch-active">
+          <div class="w-12 h-12 rounded-full bg-emerald-100 text-zappix-green flex items-center justify-center text-xl mb-1 shadow-sm" aria-hidden="true">
+            <i class="fa-solid fa-arrow-up-from-bracket"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-700">Pagar Pix</span>
+        </button>
+
+        <button onclick="openScannerModal()" class="flex flex-col items-center p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200/80 transition touch-active">
+          <div class="w-12 h-12 rounded-full bg-emerald-100 text-zappix-green flex items-center justify-center text-xl mb-1 shadow-sm" aria-hidden="true">
+            <i class="fa-solid fa-camera"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-700">Ler QR Code</span>
+        </button>
+
+        <button onclick="switchView('view-pos')" class="flex flex-col items-center p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200/80 transition touch-active">
+          <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xl mb-1 shadow-sm" aria-hidden="true">
+            <i class="fa-solid fa-calculator"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-700">Maquininha</span>
+        </button>
+
+        <button onclick="switchView('view-fiado')" class="flex flex-col items-center p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200/80 transition touch-active">
+          <div class="w-12 h-12 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-xl mb-1 shadow-sm" aria-hidden="true">
+            <i class="fa-solid fa-book-bookmark"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-700">Caderninho</span>
+        </button>
+      </div>
+
+      <!-- ÚLTIMAS MOVIMENTAÇÕES -->
+      <div class="space-y-2">
+        <div class="flex justify-between items-center">
+          <h3 class="font-extrabold text-slate-800 text-sm flex items-center gap-1.5">
+            <i class="fa-solid fa-clock-rotate-left text-zappix-green" aria-hidden="true"></i> Últimas Movimentações
+          </h3>
+          <button onclick="switchView('view-extrato')" class="text-xs text-zappix-green font-bold">Ver Tudo</button>
+        </div>
+        <div id="homeRecentTransactions" class="space-y-2"></div>
+      </div>
+
+      <!-- STATUS DA REDE NOSTR -->
+      <div class="bg-slate-900 text-slate-200 rounded-xl p-3 text-xs flex items-center justify-between shadow">
+        <div class="flex items-center space-x-2">
+          <span id="nostrIndicatorDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true"></span>
+          <span id="nostrIndicatorText" class="font-medium">Rede P2P Nostr & Pix Ativa</span>
+        </div>
+        <button onclick="openModal('profileModal')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-amber-400 font-mono px-2 py-0.5 rounded">
+          Configurar Nó
+        </button>
+      </div>
+    </section>
+
+    <!-- ABA 2: CONVERSAS & COBRANÇAS (CHATS) -->
+    <section id="view-chats" class="view-panel hidden">
+      <div id="chatListSubView" class="p-4 space-y-3">
+        <div class="flex justify-between items-center">
+          <h2 class="text-lg font-black text-slate-800">Conversas & Cobranças</h2>
+          <button onclick="openNewContactModal()" class="bg-zappix-green text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow">
+            <i class="fa-solid fa-user-plus" aria-hidden="true"></i> Novo Contato
+          </button>
+        </div>
+        
+        <div class="relative">
+          <input type="text" id="chatSearchInput" oninput="renderChatsList()" placeholder="Buscar contato ou chave Pix..." aria-label="Buscar contato" class="w-full bg-slate-100 border border-slate-200 rounded-xl py-2.5 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-zappix-green">
+          <i class="fa-solid fa-search absolute left-3 top-3 text-slate-400 text-sm" aria-hidden="true"></i>
+        </div>
+
+        <div id="contactsChatList" class="space-y-1"></div>
+      </div>
+
+      <!-- SUB-TELA DO CHAT INDIVIDUAL -->
+      <div id="chatDetailSubView" class="hidden flex flex-col h-[calc(100vh-140px)] bg-zappix-chatbg">
+        <div class="bg-zappix-green text-white p-3 flex items-center justify-between shadow-md">
+          <div class="flex items-center space-x-3">
+            <button onclick="closeActiveChat()" class="text-white pr-1 text-lg" aria-label="Voltar">
+              <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            </button>
+            <div id="chatHeaderAvatar" class="w-10 h-10 rounded-full bg-white text-zappix-green font-bold flex items-center justify-center text-lg shadow" aria-hidden="true">?</div>
+            <div>
+              <h3 id="chatHeaderName" class="font-bold text-sm leading-tight">Contato</h3>
+              <p id="chatHeaderSubtext" class="text-[11px] text-emerald-100 font-mono">Chave: ...</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="startChatPixTransfer()" class="bg-zappix-yellow text-zappix-darkgreen px-2.5 py-1 rounded-lg text-xs font-black shadow flex items-center gap-1">
+              ⚡ Pix
+            </button>
+          </div>
+        </div>
+
+        <div id="chatMessagesContainer" class="flex-1 p-3 overflow-y-auto space-y-3" aria-live="polite"></div>
+
+        <div class="bg-slate-100 p-2 border-t border-slate-200 flex items-center space-x-2">
+          <button onclick="startChatPixTransfer()" class="p-2 text-zappix-green hover:bg-slate-200 rounded-full text-lg" aria-label="Mandar Pix" title="Mandar Pix">
+            <i class="fa-solid fa-circle-dollar-to-slot" aria-hidden="true"></i>
+          </button>
+          <input type="text" id="chatMessageInput" placeholder="Mensagem ou 'Pix 20'..." aria-label="Mensagem" class="flex-1 bg-white border border-slate-300 rounded-full py-2 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-zappix-green" onkeypress="if(event.key==='Enter') sendChatMessage()">
+          <button onclick="sendChatMessage()" class="w-10 h-10 bg-zappix-green text-white rounded-full flex items-center justify-center shadow hover:bg-zappix-darkgreen" aria-label="Enviar mensagem">
+            <i class="fa-solid fa-paper-plane text-sm" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 3: EXTRATO -->
+    <section id="view-extrato" class="view-panel hidden p-4 space-y-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-lg font-black text-slate-800">Extrato ZapPix</h2>
+          <p class="text-xs text-slate-500">Histórico completo de depósitos e envios</p>
+        </div>
+        <button onclick="exportExtratoCSV()" class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1">
+          <i class="fa-solid fa-file-csv" aria-hidden="true"></i> Exportar
+        </button>
+      </div>
+
+      <div class="flex border-b border-slate-200 text-sm font-semibold">
+        <button onclick="setExtratoFilter('all')" id="extratoTab-all" class="flex-1 py-2 text-center border-b-2 border-zappix-green text-zappix-green font-bold">Todos</button>
+        <button onclick="setExtratoFilter('sent')" id="extratoTab-sent" class="flex-1 py-2 text-center text-slate-500 hover:text-slate-800">Enviados</button>
+        <button onclick="setExtratoFilter('received')" id="extratoTab-received" class="flex-1 py-2 text-center text-slate-500 hover:text-slate-800">Recebidos</button>
+      </div>
+
+      <div class="relative">
+        <input type="text" id="extratoSearchInput" oninput="renderExtratoList()" placeholder="Buscar por nome, valor ou ID..." aria-label="Buscar no extrato" class="w-full bg-slate-100 border border-slate-200 rounded-xl py-2 px-8 text-xs focus:outline-none">
+        <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-400 text-xs" aria-hidden="true"></i>
+      </div>
+
+      <div id="extratoFullList" class="space-y-2"></div>
+    </section>
+
+    <!-- ABA 4: MAQUININHA POS BALCÃO -->
+    <section id="view-pos" class="view-panel hidden p-4 space-y-4">
+      <div class="bg-slate-900 text-white p-4 rounded-2xl shadow-xl space-y-3">
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-bold text-zappix-yellow uppercase tracking-widest flex items-center gap-1">
+            <i class="fa-solid fa-cash-register" aria-hidden="true"></i> ZapPix POS Balcão
+          </span>
+          <span id="posAudioBadge" class="text-[10px] bg-emerald-800 text-emerald-200 px-2 py-0.5 rounded font-bold">Voz Caixa Ligada</span>
+        </div>
+
+        <div>
+          <label class="text-[11px] text-slate-400 font-medium">VALOR DA COBRANÇA</label>
+          <div class="text-3xl font-black text-white flex items-baseline gap-1">
+            <span class="text-zappix-yellow text-xl">R$</span>
+            <span id="posAmountDisplay">0,00</span>
+            <span id="posSatsEquivalent" class="text-xs text-amber-300 font-mono ml-2">(~0 sats)</span>
+          </div>
+        </div>
+
+        <div>
+          <input type="text" id="posDescriptionInput" placeholder="Descrição (Ex: 2x Pastel + Caldo de Cana)" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-zappix-yellow">
+        </div>
+      </div>
+
+      <!-- TECLADO NUMÉRICO DA MAQUININHA -->
+      <div class="grid grid-cols-3 gap-2 text-center">
+        <button onclick="pressPosKey('1')" class="bg-white border border-slate-300 py-3 rounded-xl font-black text-xl shadow-sm hover:bg-slate-50 active:bg-slate-200">1</button>
+        <button onclick="pressPosKey('2')" class="bg-white border border-slate-300 py-3 rounded-xl font-black text-xl shadow-sm hover:bg-slate-50 active:bg-slate-200">2</button>
+        <button onclick="pressPosKey('3')" class="bg-white border border-slate-300 py-3 rounded-xl font-black text-xl shadow-sm hover:bg-slate-50 active:bg-slate-200">3</button>
+        <button onclick="pressPosKey('4')" class="bg-white border border-slate-300 py-3 rounded-xl font-black text-xl shadow-sm hover:bg-slate-50 active:bg-slate-200">4</button>
+        <button onclick="pressPosKey('5')" class="bg-white border border-slate-300 py-3 rounded-xl font-black text-xl shadow-sm hover:bg-slate-50 active:bg-slate-200">5</button>
+        <button onclick="pressPosKey('6')" class="bg-white border border-slate-300 py-3 rounded-xl font-black text-xl shadow-sm hover:bg-slate-50 active:bg-slate-200">6</button>
+        <button onclick="pressPosKey('7')" class="bg-white border border-slate-300 py-3 rounded-xl font-black text-xl shadow-sm hover:bg-slate-50 active:bg-slate-200">7</button>
+        <button onclick="pressPosKey('8')" class="bg-white border border-slate-300 py-3 rounded-xl font-black text-xl shadow-sm hover:bg-slate-50 active:bg-slate-200">8</button>
+        <button onclick="pressPosKey('9')" class="bg-white border border-slate-300 py-3 rounded-xl font-black text-xl shadow-sm hover:bg-slate-50 active:bg-slate-200">9</button>
+        <button onclick="pressPosKey('C')" class="bg-red-50 text-red-600 border border-red-200 py-3 rounded-xl font-black text-lg shadow-sm">C</button>
+        <button onclick="pressPosKey('0')" class="bg-white border border-slate-300 py-3 rounded-xl font-black text-xl shadow-sm hover:bg-slate-50 active:bg-slate-200">0</button>
+        <button onclick="pressPosKey('00')" class="bg-white border border-slate-300 py-3 rounded-xl font-bold text-base shadow-sm hover:bg-slate-50 active:bg-slate-200">00</button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <button onclick="generatePosQrCode('pix')" class="bg-zappix-green text-white font-extrabold py-3.5 rounded-xl shadow-lg hover:bg-zappix-darkgreen flex items-center justify-center space-x-2 text-sm touch-active">
+          <i class="fa-solid fa-qrcode text-lg" aria-hidden="true"></i>
+          <span>COBRAR PIX</span>
+        </button>
+        <button onclick="generatePosQrCode('lightning')" class="bg-amber-500 text-gray-950 font-extrabold py-3.5 rounded-xl shadow-lg hover:bg-amber-400 flex items-center justify-center space-x-2 text-sm touch-active">
+          <i class="fa-solid fa-bolt text-lg" aria-hidden="true"></i>
+          <span>COBRAR SATS ⚡</span>
+        </button>
+      </div>
+
+      <!-- CONTAINER DO QR CODE GERADO -->
+      <div id="posQrDisplayContainer" class="hidden bg-white border border-slate-200 rounded-2xl p-4 text-center space-y-3 shadow-md">
+        <div class="flex items-center justify-between border-b pb-2">
+          <h4 id="posQrHeaderTitle" class="font-extrabold text-slate-800 text-sm">Mostre este QR Code ao Cliente</h4>
+          <span id="posWatcherStatus" class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold flex items-center gap-1">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Aguardando
+          </span>
+        </div>
+
+        <div id="posQrCodeElement" class="flex justify-center p-2 bg-slate-50 rounded-xl"></div>
+        <p id="posQrCodeText" class="text-xs font-mono text-slate-600 break-all bg-slate-100 p-2 rounded max-h-16 overflow-y-auto"></p>
+
+        <div class="flex gap-2">
+          <button onclick="copyPosQrPayload()" class="flex-1 bg-slate-200 text-slate-800 text-xs font-bold py-2 rounded-lg">
+            <i class="fa-solid fa-copy" aria-hidden="true"></i> Copia e Cola
+          </button>
+          <button onclick="simulatePosPaymentReceived()" class="flex-1 bg-emerald-600 text-white text-xs font-bold py-2 rounded-lg shadow hover:bg-emerald-700">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i> Simular Pagamento
+          </button>
+        </div>
+      </div>
+      <div id="posAnnouncement" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+    </section>
+
+    <!-- ABA 5: CADERNINHO DIGITAL DO FIADO -->
+    <section id="view-fiado" class="view-panel hidden p-4 space-y-4">
+      <div class="bg-gradient-to-r from-purple-800 to-indigo-900 rounded-2xl p-4 text-white shadow-xl space-y-2">
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-bold uppercase tracking-wider text-purple-200">Caderninho Digital do Fiado</span>
+          <button onclick="openNewFiadoModal()" class="bg-purple-500 hover:bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-lg shadow">+ Anotar Fiado</button>
+        </div>
+        <div>
+          <span class="text-xs text-purple-200">TOTAL A RECEBER DOS CLIENTES</span>
+          <div class="text-3xl font-black text-amber-300">R$ <span id="fiadoTotalDisplay">0,00</span></div>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <h3 class="font-bold text-slate-800 text-sm">Clientes Devedores</h3>
+        <div id="fiadoListContainer" class="space-y-2"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- BARRA DE NAVEGAÇÃO INFERIOR COM 5 BOTÕES -->
+  <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-slate-200 z-30 px-2 py-1 flex justify-around items-center shadow-lg">
+    <button onclick="switchView('view-home')" id="nav-view-home" class="nav-btn flex flex-col items-center py-1.5 px-3 text-zappix-green" aria-current="page">
+      <i class="fa-solid fa-house text-lg" aria-hidden="true"></i>
+      <span class="text-[10px] font-bold mt-0.5">Início</span>
+    </button>
+    <button onclick="switchView('view-chats')" id="nav-view-chats" class="nav-btn flex flex-col items-center py-1.5 px-3 text-slate-400 hover:text-slate-600 relative">
+      <i class="fa-solid fa-comments text-lg" aria-hidden="true"></i>
+      <span class="text-[10px] font-medium mt-0.5">Conversas</span>
+      <span id="unreadChatBadge" class="hidden absolute top-1 right-3 bg-red-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">0</span>
+    </button>
+    <button onclick="switchView('view-extrato')" id="nav-view-extrato" class="nav-btn flex flex-col items-center py-1.5 px-3 text-slate-400 hover:text-slate-600">
+      <i class="fa-solid fa-receipt text-lg" aria-hidden="true"></i>
+      <span class="text-[10px] font-medium mt-0.5">Extrato</span>
+    </button>
+    <button onclick="switchView('view-pos')" id="nav-view-pos" class="nav-btn flex flex-col items-center py-1.5 px-3 text-slate-400 hover:text-slate-600">
+      <i class="fa-solid fa-cash-register text-lg" aria-hidden="true"></i>
+      <span class="text-[10px] font-medium mt-0.5">Maquininha</span>
+    </button>
+    <button onclick="switchView('view-fiado')" id="nav-view-fiado" class="nav-btn flex flex-col items-center py-1.5 px-3 text-slate-400 hover:text-slate-600">
+      <i class="fa-solid fa-book text-lg" aria-hidden="true"></i>
+      <span class="text-[10px] font-medium mt-0.5">Fiado</span>
+    </button>
+  </nav>
+
+  <!-- ============================================================
+       MODAIS DO SISTEMA
+       ============================================================ -->
+
+  <!-- MODAL PIX / LIGHTNING ENVIAR -->
+  <div id="pixModal" role="dialog" aria-modal="true" aria-labelledby="pixModalTitle" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <div class="bg-zappix-green text-white p-4 flex justify-between items-center">
+        <h3 id="pixModalTitle" class="font-extrabold text-base flex items-center gap-2">
+          <i class="fa-solid fa-paper-plane text-zappix-yellow" aria-hidden="true"></i> Mandar Pagamento (Pix ou Lightning)
+        </h3>
+        <button onclick="closeModal('pixModal')" class="text-white hover:text-slate-200 text-lg" aria-label="Fechar">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div class="p-4 space-y-4 overflow-y-auto flex-1">
+        <!-- PASSO 1: CHAVE OU CONTATO -->
+        <div id="pixStep1" class="space-y-3">
+          <label for="pixKeyInput" class="text-xs font-bold text-slate-700">Informe a Chave Pix ou Invoice Lightning (BOLT11)</label>
+          <div class="relative">
+            <input type="text" id="pixKeyInput" placeholder="Chave Pix, lnbc1... ou usuário@domínio" class="w-full border-2 border-slate-300 rounded-xl py-3 px-3 text-sm focus:border-zappix-green focus:outline-none font-medium">
+            <button onclick="openScannerModal()" class="absolute right-2 top-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-bold">
+              <i class="fa-solid fa-camera" aria-hidden="true"></i> Scan
+            </button>
+          </div>
+
+          <p class="text-xs text-slate-500 font-semibold">Ou selecione um contato salvo:</p>
+          <div id="pixContactsQuickSelect" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
+
+          <button onclick="goToPixStep2()" class="w-full bg-zappix-green text-white font-extrabold py-3 rounded-xl shadow hover:bg-zappix-darkgreen">Continuar para Valor</button>
+        </div>
+
+        <!-- PASSO 2: VALOR & DETALHES -->
+        <div id="pixStep2" class="hidden space-y-4">
+          <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-zappix-green text-white flex items-center justify-center font-bold text-base shadow" aria-hidden="true">
+              <i class="fa-solid fa-user"></i>
+            </div>
+            <div class="truncate">
+              <p class="text-xs text-slate-500">Destinatário Selecionado:</p>
+              <h4 id="pixRecipientNameDisplay" class="font-bold text-sm text-slate-800 truncate">Nome do Destinatário</h4>
+              <p id="pixRecipientKeyDisplay" class="text-[11px] text-slate-500 font-mono truncate">Chave: ...</p>
+            </div>
+          </div>
+
+          <!-- DESCRIÇÃO SE ENCONTRADA NA INVOICE -->
+          <div id="pixInvoiceMemoBox" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-xs text-amber-900">
+            <span class="font-bold">Memo / Descrição:</span> <span id="pixInvoiceMemoText"></span>
+          </div>
+
+          <div>
+            <label for="pixAmountInput" class="text-xs font-bold text-slate-700" id="pixAmountLabel">VALOR A TRANSFERIR (R$)</label>
+            <div class="relative mt-1">
+              <span id="pixCurrencyPrefix" class="absolute left-3 top-3 text-xl font-bold text-zappix-green">R$</span>
+              <input type="number" id="pixAmountInput" step="0.01" min="0.01" placeholder="0,00" class="w-full border-2 border-slate-300 rounded-xl py-3 pl-12 pr-4 text-2xl font-black text-slate-800 focus:border-zappix-green focus:outline-none">
+            </div>
+            <p id="pixLimitNotice" class="text-[10px] text-slate-400 mt-1">Limite por transação: R$ 5.000 · Limite diário: R$ 20.000</p>
+          </div>
+
+          <!-- ALERTA ANTI-GOLPE -->
+          <div id="antiScamAlertBox" class="hidden bg-red-50 border-2 border-red-300 rounded-xl p-3 space-y-1" role="alert">
+            <div class="flex items-center space-x-2 text-red-700 font-extrabold text-xs">
+              <i class="fa-solid fa-triangle-exclamation text-base animate-bounce" aria-hidden="true"></i>
+              <span>ALERTA DE SEGURANÇA ZAPPIX</span>
+            </div>
+            <p id="antiScamAlertMsg" class="text-xs text-red-600 font-medium leading-tight">
+              Atenção! Esta é uma transferência de valor alto ou para um contato novo. Verifique antes de informar seu PIN!
+            </p>
+          </div>
+
+          <div class="flex gap-2">
+            <button onclick="backToPixStep1()" class="w-1/3 bg-slate-200 text-slate-700 font-bold py-3 rounded-xl">Voltar</button>
+            <button onclick="goToPixStep3()" class="w-2/3 bg-zappix-green text-white font-extrabold py-3 rounded-xl shadow hover:bg-zappix-darkgreen">Confirmar & Pagar</button>
+          </div>
+        </div>
+
+        <!-- PASSO 3: PIN DE SEGURANÇA (TECLADO NUMÉRICO) -->
+        <div id="pixStep3" class="hidden space-y-4 text-center">
+          <h4 class="font-extrabold text-slate-800 text-base">Digite seu PIN de Segurança</h4>
+          <p class="text-xs text-slate-500">Confirme o envio de <span id="pixConfirmAmountText" class="font-bold text-slate-900">R$ 0,00</span></p>
+
+          <div class="flex justify-center space-x-3 py-2" aria-hidden="true">
+            <div id="pinDot0" class="w-4 h-4 rounded-full border-2 border-slate-300 bg-white"></div>
+            <div id="pinDot1" class="w-4 h-4 rounded-full border-2 border-slate-300 bg-white"></div>
+            <div id="pinDot2" class="w-4 h-4 rounded-full border-2 border-slate-300 bg-white"></div>
+            <div id="pinDot3" class="w-4 h-4 rounded-full border-2 border-slate-300 bg-white"></div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 max-w-xs mx-auto">
+            <button onclick="pressPinKey('1')" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold text-lg">1</button>
+            <button onclick="pressPinKey('2')" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold text-lg">2</button>
+            <button onclick="pressPinKey('3')" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold text-lg">3</button>
+            <button onclick="pressPinKey('4')" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold text-lg">4</button>
+            <button onclick="pressPinKey('5')" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold text-lg">5</button>
+            <button onclick="pressPinKey('6')" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold text-lg">6</button>
+            <button onclick="pressPinKey('7')" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold text-lg">7</button>
+            <button onclick="pressPinKey('8')" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold text-lg">8</button>
+            <button onclick="pressPinKey('9')" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold text-lg">9</button>
+            <button onclick="clearPin()" class="bg-red-50 text-red-600 py-3 rounded-xl font-bold text-xs">Limpar</button>
+            <button onclick="pressPinKey('0')" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold text-lg">0</button>
+            <button onclick="backspacePin()" class="bg-slate-200 py-3 rounded-xl font-bold text-sm" aria-label="Apagar"><i class="fa-solid fa-backspace" aria-hidden="true"></i></button>
+          </div>
+
+          <p id="pinLockMessage" class="hidden text-xs text-red-600 font-bold" role="alert"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DEPOSITAR / COBRAR COM ABAS PIX & LIGHTNING -->
+  <div id="depositModal" role="dialog" aria-modal="true" aria-labelledby="depositTitle" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-4 space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 id="depositTitle" class="font-extrabold text-base text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-qrcode text-zappix-green" aria-hidden="true"></i> Receber / Depositar
+        </h3>
+        <button onclick="closeModal('depositModal')" class="text-slate-400 hover:text-slate-600 text-lg" aria-label="Fechar">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <!-- SELETOR DE MODO (PIX OU LIGHTNING SATS) -->
+      <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl text-xs font-bold">
+        <button onclick="setDepositMode('pix')" id="depTabPix" class="py-2 rounded-lg bg-zappix-green text-white shadow">Pix (R$)</button>
+        <button onclick="setDepositMode('lightning')" id="depTabLightning" class="py-2 rounded-lg text-slate-600 hover:text-slate-900">Lightning (Sats ⚡)</button>
+      </div>
+
+      <div class="space-y-3">
+        <label id="depositAmountLabel" for="depositAmountInput" class="text-xs font-bold text-slate-700">Informe o valor em Reais (R$)</label>
+        <div class="relative">
+          <span id="depositCurrencyPrefix" class="absolute left-3 top-3 text-lg font-bold text-zappix-green">R$</span>
+          <input type="number" id="depositAmountInput" value="50.00" step="10" class="w-full border-2 border-slate-300 rounded-xl py-2.5 pl-12 pr-3 font-extrabold text-xl focus:outline-none focus:border-zappix-green">
+        </div>
+
+        <button onclick="generateDepositQR()" id="btnGenerateDeposit" class="w-full bg-zappix-green text-white font-bold py-2.5 rounded-xl shadow">
+          Gerar QR Code de Cobrança
+        </button>
+
+        <!-- CONTAINER DO QR CODE -->
+        <div id="depositQrContainer" class="hidden border border-slate-200 rounded-2xl p-4 text-center space-y-3 bg-slate-50">
+          <div id="depositQrElement" class="flex justify-center"></div>
+          <p id="depositPixPayloadText" class="text-[10px] font-mono text-slate-500 break-all max-h-16 overflow-y-auto bg-white p-2 rounded border"></p>
+
+          <div class="flex gap-2">
+            <button onclick="copyDepositPayload()" class="flex-1 bg-slate-200 text-slate-800 text-xs font-bold py-2 rounded-lg">
+              <i class="fa-solid fa-copy" aria-hidden="true"></i> Copiar Código
+            </button>
+            <button onclick="simulateBankWebhookDeposit()" class="flex-1 bg-zappix-yellow text-zappix-darkgreen text-xs font-black py-2 rounded-lg shadow">
+              <i class="fa-solid fa-building-columns" aria-hidden="true"></i> Simular Recebimento
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL SCANNER DE QR CODE (CÂMERA & COPIAR) -->
+  <div id="scannerModal" role="dialog" aria-modal="true" aria-label="Escanear QR Code" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 hidden flex flex-col justify-between p-4">
+    <div class="flex justify-between items-center text-white">
+      <h3 class="font-bold text-base"><i class="fa-solid fa-camera" aria-hidden="true"></i> Escanear QR Code Pix ou Lightning</h3>
+      <button onclick="closeScannerModal()" class="text-white text-xl p-2" aria-label="Fechar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
     </div>
 
-    <!-- MOTOR JAVASCRIPT REAL -->
-    <script>
-    let appState = {
-        nwcUri: localStorage.getItem('nostrpix_nwc_uri') || '',
-        nwcParams: null,
-        balanceSats: 0,
-        btcBrlRate: 550000.00,
-        receipts: JSON.parse(localStorage.getItem('nostrpix_receipts') || '[]'),
-        pendingPayment: null,
-        activeInvoicePolling: null,
-        activeReceiveMode: 'lightning' // 'lightning' ou 'pix'
+    <div class="w-full max-w-sm mx-auto bg-black rounded-2xl overflow-hidden border-2 border-zappix-yellow shadow-2xl relative">
+      <div id="qrReaderView" class="w-full h-64"></div>
+      <p class="text-center text-xs text-white bg-black/60 py-2">Aponte a câmera para o QR Code</p>
+    </div>
+
+    <div class="space-y-2 max-w-sm mx-auto w-full">
+      <button onclick="pasteQrFromClipboard()" class="w-full bg-white text-slate-800 font-bold py-3 rounded-xl shadow flex items-center justify-center gap-2">
+        <i class="fa-solid fa-paste text-zappix-green" aria-hidden="true"></i> Colar QR Code Copiado
+      </button>
+      <button onclick="closeScannerModal()" class="w-full bg-slate-800 text-slate-300 font-semibold py-2.5 rounded-xl">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- MODAL COMPROVANTE DETALHADO -->
+  <div id="comprovanteModal" role="dialog" aria-modal="true" aria-labelledby="compTitle" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+      <div id="comprovanteContent" class="p-5 overflow-y-auto space-y-4 bg-white text-slate-800">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+          <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 rounded-full bg-zappix-green text-white flex items-center justify-center font-bold text-sm" aria-hidden="true">⚡</div>
+            <div>
+              <h3 id="compTitle" class="font-black text-sm text-zappix-darkgreen uppercase">ZapPix S.A.</h3>
+              <p class="text-[10px] text-slate-400">Comprovante de Pagamento & Transferência</p>
+            </div>
+          </div>
+          <span id="compBadge" class="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full">CONFIRMADO</span>
+        </div>
+
+        <div class="text-center py-2 space-y-1">
+          <span class="text-xs text-slate-500 font-medium">VALOR PROCESSADO</span>
+          <div id="compAmount" class="text-3xl font-black text-slate-900">R$ 0,00</div>
+          <p id="compDate" class="text-[11px] text-slate-400 font-mono">--/--/---- --:--:--</p>
+        </div>
+
+        <div class="bg-slate-50 rounded-2xl p-3 space-y-2 text-xs border border-slate-200">
+          <div>
+            <span class="text-slate-400 block text-[10px] font-bold">RECEBEDOR</span>
+            <span id="compRecipientName" class="font-bold text-slate-800 text-sm">--</span>
+            <p id="compRecipientKey" class="text-slate-500 font-mono text-[11px]">Chave: --</p>
+            <p id="compRecipientBank" class="text-slate-500 text-[11px]">Instituição: --</p>
+          </div>
+          <hr class="border-slate-200">
+          <div>
+            <span class="text-slate-400 block text-[10px] font-bold">PAGADOR</span>
+            <span id="compSenderName" class="font-bold text-slate-800">--</span>
+            <p id="compSenderCpf" class="text-slate-500 font-mono text-[11px]">CPF: ***.***.***-**</p>
+            <p class="text-slate-500 text-[11px]">Instituição: ZapPix Pagamentos</p>
+          </div>
+        </div>
+
+        <div class="space-y-1 text-[10px] text-slate-400 font-mono border-t border-slate-200 pt-2">
+          <div><span class="font-bold">ID Transação:</span> <span id="compE2EId">E00000...</span></div>
+          <div><span class="font-bold">Hash Integridade:</span> <span id="compShaHash">a1b2c3...</span></div>
+        </div>
+      </div>
+
+      <div class="bg-slate-100 p-3 border-t border-slate-200 space-y-2">
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="speakComprovante()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl shadow flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-volume-high" aria-hidden="true"></i> Ouvir Voz
+          </button>
+          <button onclick="downloadComprovantePng()" class="bg-zappix-yellow text-zappix-darkgreen font-extrabold text-xs py-2.5 rounded-xl shadow flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-file-image" aria-hidden="true"></i> Baixar Imagem PNG
+          </button>
+        </div>
+        <button onclick="closeModal('comprovanteModal')" class="w-full bg-slate-300 hover:bg-slate-400 text-slate-800 font-bold text-xs py-2 rounded-xl">Fechar Comprovante</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CADASTRAR CONTATO -->
+  <div id="contactModal" role="dialog" aria-modal="true" aria-labelledby="contactTitle" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl p-4 space-y-3">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 id="contactTitle" class="font-extrabold text-base text-slate-800">Cadastrar Novo Contato</h3>
+        <button onclick="closeModal('contactModal')" class="text-slate-400 text-lg" aria-label="Fechar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      </div>
+      <div class="space-y-2 text-xs">
+        <div>
+          <label for="newContactName" class="font-bold text-slate-700">Nome do Contato</label>
+          <input type="text" id="newContactName" placeholder="Ex: Seu Pedro do Mercado" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:outline-none focus:border-zappix-green">
+        </div>
+        <div>
+          <label for="newContactKey" class="font-bold text-slate-700">Chave Pix ou Lightning Address</label>
+          <input type="text" id="newContactKey" placeholder="Ex: 85988887777 ou pedro@getalby.com" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:outline-none focus:border-zappix-green font-mono">
+        </div>
+        <div>
+          <label for="newContactBank" class="font-bold text-slate-700">Instituição / Banco</label>
+          <input type="text" id="newContactBank" value="ZapPix / Lightning" class="w-full border border-slate-300 rounded-lg p-2 text-xs">
+        </div>
+        <button onclick="saveNewContact()" class="w-full bg-zappix-green text-white font-extrabold py-3 rounded-xl shadow mt-2">Salvar Contato</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ANOTAR FIADO -->
+  <div id="fiadoModal" role="dialog" aria-modal="true" aria-labelledby="fiadoTitle" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl p-4 space-y-3">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 id="fiadoTitle" class="font-extrabold text-base text-purple-900">Anotar Novo Fiado</h3>
+        <button onclick="closeModal('fiadoModal')" class="text-slate-400 text-lg" aria-label="Fechar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      </div>
+      <div class="space-y-2 text-xs">
+        <div>
+          <label for="fiadoCustomerName" class="font-bold text-slate-700">Nome do Cliente</label>
+          <input type="text" id="fiadoCustomerName" placeholder="Ex: Dona Maria da Padaria" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm">
+        </div>
+        <div>
+          <label for="fiadoCustomerPhone" class="font-bold text-slate-700">Telefone / WhatsApp</label>
+          <input type="text" id="fiadoCustomerPhone" placeholder="Ex: 85999991111" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm">
+        </div>
+        <div>
+          <label for="fiadoAmountInput" class="font-bold text-slate-700">Valor Devido (R$)</label>
+          <input type="number" id="fiadoAmountInput" step="0.50" placeholder="0.00" class="w-full border border-slate-300 rounded-lg p-2.5 text-lg font-bold text-purple-900">
+        </div>
+        <div>
+          <label for="fiadoItemsInput" class="font-bold text-slate-700">Descrição dos Itens Fiados</label>
+          <input type="text" id="fiadoItemsInput" placeholder="Ex: 1kg Arroz + Café + Açúcar" class="w-full border border-slate-300 rounded-lg p-2">
+        </div>
+        <button onclick="saveFiadoEntry()" class="w-full bg-purple-700 text-white font-extrabold py-3 rounded-xl shadow mt-2 hover:bg-purple-800">Registrar no Caderninho</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PERFIL & CONFIGURAÇÕES (COM NOSTR NWC) -->
+  <div id="profileModal" role="dialog" aria-modal="true" aria-labelledby="profileTitle" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl p-4 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 id="profileTitle" class="font-extrabold text-base text-slate-800">Meu Perfil & Carteira Nostr</h3>
+        <button onclick="closeModal('profileModal')" class="text-slate-400 text-lg" aria-label="Fechar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label for="profileUserName" class="font-bold text-slate-700">Seu Nome Completo</label>
+          <input type="text" id="profileUserName" class="w-full border border-slate-300 rounded-lg p-2 font-medium">
+        </div>
+
+        <div>
+          <label for="profileUserPixKey" class="font-bold text-slate-700">Sua Chave Pix Principal</label>
+          <input type="text" id="profileUserPixKey" class="w-full border border-slate-300 rounded-lg p-2 font-mono">
+        </div>
+
+        <!-- CONEXÃO NOSTR NWC (NIP-47) -->
+        <div class="bg-amber-50 border border-amber-300 rounded-xl p-3 space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="font-black text-amber-900 flex items-center gap-1">
+              <i class="fa-solid fa-bolt text-amber-600"></i> Conexão Carteira Lightning (NWC)
+            </span>
+            <span id="nwcModalBadge" class="text-[9px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded font-bold">Desconectado</span>
+          </div>
+          <p class="text-[11px] text-amber-800">Cole a string de conexão NWC (ex: Alby, Mutiny, Umbrel ou nostrpay):</p>
+          <textarea id="nwcConnectionInput" rows="2" placeholder="nostr+walletconnect://b889...?...relay=wss%3A%2F%2F...&secret=..." class="w-full border border-amber-300 rounded-lg p-2 font-mono text-[10px] bg-white"></textarea>
+          
+          <div class="flex gap-2">
+            <button onclick="saveNwcConnection()" class="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black py-2 rounded-lg text-xs">
+              Conectar Carteira
+            </button>
+            <button onclick="disconnectNwc()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-3 rounded-lg text-xs">
+              Desconectar
+            </button>
+          </div>
+        </div>
+
+        <!-- PIN DE SEGURANÇA -->
+        <div class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg p-2">
+          <div>
+            <p class="font-bold text-slate-700">PIN de Segurança</p>
+            <p class="text-[11px] text-slate-500">Hash SHA-256 com salt · bloqueio após 3 erros</p>
+          </div>
+          <button onclick="changePin()" class="bg-slate-800 text-white font-bold px-3 py-1.5 rounded-lg text-xs">
+            <i class="fa-solid fa-lock" aria-hidden="true"></i> Mudar PIN
+          </button>
+        </div>
+
+        <button onclick="manualLock()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl shadow">
+          <i class="fa-solid fa-lock" aria-hidden="true"></i> Bloquear Sessão Agora
+        </button>
+
+        <button onclick="saveUserProfile()" class="w-full bg-zappix-green text-white font-bold py-2.5 rounded-xl shadow">Salvar Dados do Perfil</button>
+
+        <hr class="border-slate-200">
+        <h4 class="font-extrabold text-slate-800">Backup dos Dados</h4>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="exportDataJson()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 rounded-lg text-xs">
+            <i class="fa-solid fa-download" aria-hidden="true"></i> Baixar Backup
+          </button>
+          <label class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 rounded-lg text-xs text-center cursor-pointer">
+            <i class="fa-solid fa-upload" aria-hidden="true"></i> Importar JSON
+            <input type="file" accept=".json" onchange="importDataJson(event)" class="hidden">
+          </label>
+        </div>
+
+        <button onclick="resetAppStateToDefault()" class="w-full bg-red-100 hover:bg-red-200 text-red-700 font-bold py-2 rounded-xl text-xs mt-2">Restaurar Dados Originais do Seu Pedro</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL COMANDO POR VOZ ("APERTE E FALE") -->
+  <div id="voiceModal" role="dialog" aria-modal="true" aria-labelledby="voiceTitle" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 hidden flex flex-col justify-center items-center p-4 text-white text-center">
+    <div class="w-24 h-24 rounded-full bg-zappix-yellow text-zappix-darkgreen flex items-center justify-center text-4xl mb-4 pulse-glow shadow-2xl" aria-hidden="true">
+      <i class="fa-solid fa-microphone"></i>
+    </div>
+    <h3 id="voiceTitle" class="font-black text-xl mb-1">Aperte e Fale ZapPix</h3>
+    <p id="voiceStatusText" class="text-xs text-slate-300 max-w-xs mb-2" aria-live="polite">Escutando...</p>
+    <p class="text-[10px] text-amber-300 max-w-xs mb-6">Exemplos: "Mandar Pix 50", "Maquininha", "Extrato", "Caderninho"</p>
+    <button onclick="closeModal('voiceModal')" class="bg-white/20 hover:bg-white/30 text-white font-bold px-6 py-2.5 rounded-full text-xs">Fechar Voz</button>
+  </div>
+
+  <!-- LOCK SCREEN (BLOQUEIO DE SESSÃO) -->
+  <div id="lockScreen" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[200] hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-8 text-center max-w-sm w-full shadow-2xl">
+      <div class="text-5xl mb-4" aria-hidden="true">🔒</div>
+      <h2 class="text-xl font-black text-slate-800 mb-2">Sessão Bloqueada</h2>
+      <p id="lockReason" class="text-sm text-slate-500 mb-5">Por segurança, digite seu PIN para continuar.</p>
+      <button onclick="unlockSessionUI()" class="w-full bg-zappix-green hover:bg-zappix-darkgreen text-white font-black py-3.5 rounded-xl shadow">
+        DESBLOQUEAR COM PIN
+      </button>
+      <p class="text-[10px] text-slate-400 mt-4">Por segurança, sua sessão bloqueia após inatividade.</p>
+    </div>
+  </div>
+
+  <!-- DISCLAIMER INICIAL (PRIMEIRO ACESSO) -->
+  <div id="disclaimerOverlay" class="fixed inset-0 bg-slate-900/85 z-[300] hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl">
+      <div class="text-5xl text-center mb-2" aria-hidden="true">⚡</div>
+      <h2 class="text-lg font-black text-emerald-800 text-center mb-3">BEM-VINDO AO ZAPPIX</h2>
+      <p class="text-sm text-slate-600 mb-2 leading-relaxed">
+        O <strong>ZapPix</strong> combina a simplicidade do Pix e do comércio tradicional (como a maquininha e o caderninho do Seu Pedro) com a liberdade do <strong>Bitcoin Lightning (via Nostr NWC)</strong>.
+      </p>
+      <p class="text-xs text-slate-500 mb-4 leading-normal">
+        No modo padrão, opere em ambiente de teste seguro. Conecte sua carteira NWC no perfil para pagamentos Lightning reais!
+      </p>
+      <button onclick="acceptDisclaimer()" class="w-full bg-zappix-green hover:bg-zappix-darkgreen text-white font-black py-3 rounded-xl shadow">
+        COMEÇAR A USAR
+      </button>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toastContainer" class="fixed bottom-24 left-0 right-0 flex flex-col items-center gap-2 pointer-events-none z-[150] px-4" aria-live="polite"></div>
+
+  <!-- CANVAS OCULTO PARA EXPORTAR COMPROVANTE PNG -->
+  <canvas id="comprovanteCanvas" width="800" height="1100" class="hidden"></canvas>
+
+  <!-- ============================================================
+       SCRIPT PRINCIPAL: LÓGICA, ESTADO, PIX & NOSTR NWC
+       ============================================================ -->
+  <script>
+    const STATE_KEY = 'zappix_app_state_v5';
+    const SESSION_TIMEOUT_MS = 10 * 60 * 1000;
+    const TAB_HIDDEN_LOCK_MS = 60 * 1000;
+    const RATE_LIMITS = { maxPerMinute: 5, maxPerTx: 5000, maxPerDay: 20000 };
+
+    const defaultState = {
+      user: {
+        name: 'Pedro Oliveira (Seu Pedro)',
+        cpf: '123.456.789-00',
+        pixKey: 'pedro@zappix.com.br',
+        pinHash: null,
+        pinSalt: null,
+        pinFailedAttempts: 0,
+        pinLockedUntil: 0,
+        balance: 1450.50,
+        satsBalance: 0,
+        nwcUrl: '',
+        lud16: '',
+        seuPedroMode: false,
+        voiceGuide: true
+      },
+      contacts: [
+        { id: 'c1', name: 'Maria da Silva', key: '85999887766', bank: 'ZapPix', avatar: '👩' },
+        { id: 'c2', name: 'João do Posto', key: 'joao@posto.com', bank: 'Banco Demo', avatar: '👨' },
+        { id: 'c3', name: 'Padaria Central', key: '00112233445566', bank: 'Itaú Demo', avatar: '🍞' },
+        { id: 'c4', name: 'Satoshi Nakamoto', key: 'satoshi@getalby.com', bank: 'Lightning ⚡', avatar: '⚡' }
+      ],
+      transactions: [
+        { id: 'tx1', type: 'received', amount: 250.00, currency: 'BRL', date: '2026-11-12 09:30:15',
+          name: 'João do Posto', key: 'joao@posto.com', bank: 'Banco Demo',
+          e2eId: 'E0039446020261112093015000001', shaHash: '8f941a3d2c1e4f9b8c7d6e5f4a3b2c1d' },
+        { id: 'tx2', type: 'sent', amount: 45.00, currency: 'BRL', date: '2026-11-11 16:20:00',
+          name: 'Padaria Central', key: '00112233445566', bank: 'Itaú Demo',
+          e2eId: 'E0039446020261111162000000002', shaHash: '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d' }
+      ],
+      chats: {
+        'c1': [
+          { sender: 'them', text: 'Bom dia Seu Pedro, tudo bem?', time: '08:15' },
+          { sender: 'me', text: 'Tudo ótimo Maria! Como tá o movimento aí?', time: '08:20' }
+        ],
+        'c2': [{ sender: 'them', text: 'Mandei o Pix da gasolina ontem!', time: 'Ontem' }]
+      },
+      fiado: [
+        { id: 'f1', name: 'Dona Neide', phone: '85988776655', amount: 85.50, items: '2x Leite + Café + Queijo', date: '10/11/2026' },
+        { id: 'f2', name: 'Chico Pedreiro', phone: '85977665544', amount: 120.00, items: 'Pasteis e Cerveja', date: '08/11/2026' }
+      ]
     };
 
-    let videoStream = null;
-    let scanningActive = false;
+    let appState = loadState();
+    let isBalanceVisible = true;
+    let currentExtratoFilter = 'all';
+    let activeChatContactId = null;
+    let currentPixDraft = { recipientName: '', recipientKey: '', recipientBank: '', amount: 0, isLightning: false, bolt11: '', memo: '' };
+    let currentPinInput = '';
+    let pinVerifying = false;
+    let posCurrentAmountStr = '0';
+    let posGeneratedPayload = '';
+    let posWatcherInterval = null;
+    let activeComprovanteTx = null;
+    let html5QrScanner = null;
+    let scannerRunning = false;
+    let isLocked = false;
+    let sessionIdleTimer = null;
+    let tabHiddenAt = null;
+    let btcBrlPrice = 550000;
+    let currentDepositMode = 'pix';
+    const txRateHistory = [];
 
-    // INICIALIZAÇÃO
+    // NWC Context
+    let nwcParsed = null;
+    let nwcRelaySocket = null;
+    const nwcPendingRequests = new Map();
+
+    /* ============================================================
+       INICIALIZAÇÃO & CICLO DE VIDA
+       ============================================================ */
     window.addEventListener('load', async () => {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(console.error);
-        }
-        await updateBtcPrice();
-        setInterval(updateBtcPrice, 60000);
+      if (location.protocol !== 'https:' && !['localhost', '127.0.0.1', ''].includes(location.hostname)) {
+        document.getElementById('httpsWarning')?.classList.remove('hidden');
+      }
 
-        if (appState.nwcUri) {
-            parseNwcUri(appState.nwcUri);
-            syncWalletBalance(true);
-        }
-        renderReceipts();
-        updateReceiveSatsPreview();
+      window.addEventListener('error', (e) => {
+        console.error('[ZapPix Global Error]', e.error || e.message);
+      });
+      window.addEventListener('unhandledrejection', (e) => {
+        console.error('[ZapPix Promise Rejection]', e.reason);
+      });
 
-        // RECURSO DO NOSTR_PAY: Auto-sync ao voltar para o app (foreground)
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') {
-                syncWalletBalance(true);
-                updateBtcPrice();
-            }
-        });
+      await ensurePinReady();
+      checkDisclaimer();
+      setupDelegation();
+      setupSessionListeners();
+      resetIdleTimer();
+
+      fetchBtcPrice();
+      setInterval(fetchBtcPrice, 60000);
+
+      initNwcFromState();
+      renderAllViews();
     });
 
-    // CÂMBIO BTC/BRL EM TEMPO REAL
-    async function updateBtcPrice() {
-        try {
-            const res = await fetch('https://economia.awesomeapi.com.br/json/last/BTC-BRL');
-            const data = await res.json();
-            if (data && data.BTCBRL) {
-                appState.btcBrlRate = parseFloat(data.BTCBRL.bid);
-                document.getElementById('btc-brl-rate').innerText = appState.btcBrlRate.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-                const satVal = (100 * (appState.btcBrlRate / 1e8)).toFixed(2);
-                document.getElementById('sats-ratio').innerText = `100 Sats ≈ R$ ${satVal.replace('.', ',')}`;
-                updateBalanceDisplay();
-                updateReceiveSatsPreview();
-            }
-        } catch (e) {
-            console.warn('Erro ao atualizar câmbio BTC', e);
-        }
-    }
+    function setupSessionListeners() {
+      ['click', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
+        document.addEventListener(evt, resetIdleTimer, { passive: true });
+      });
 
-    function updateBalanceDisplay() {
-        document.getElementById('balance-sats').innerText = appState.balanceSats.toLocaleString('pt-BR');
-        const brlVal = (appState.balanceSats * (appState.btcBrlRate / 1e8));
-        document.getElementById('balance-brl').innerText = brlVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-
-    // NIP-47 (NOSTR WALLET CONNECT) CLIENT
-    function parseNwcUri(uri) {
-        try {
-            const url = new URL(uri.replace('nostr+walletconnect://', 'https://'));
-            const walletPubkey = (url.hostname || url.pathname.replace('/', '')).toLowerCase();
-            const relay = url.searchParams.get('relay');
-            const secret = url.searchParams.get('secret');
-            const lud16 = url.searchParams.get('lud16') || '';
-
-            if (!walletPubkey || !relay || !secret) throw new Error('Parâmetros NWC incompletos');
-
-            appState.nwcParams = { walletPubkey, relay, secret, lud16 };
-            setWalletConnectedUI(true, lud16);
-            return true;
-        } catch (e) {
-            appState.nwcParams = null;
-            setWalletConnectedUI(false);
-            return false;
-        }
-    }
-
-    function setWalletConnectedUI(connected, lud16 = '') {
-        const ind = document.getElementById('nwc-indicator');
-        const lbl = document.getElementById('nwc-status-label');
-        const badge = document.getElementById('wallet-type-badge');
-        const ludBanner = document.getElementById('lud16-banner');
-
-        if (connected) {
-            ind.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block';
-            lbl.innerText = 'Carteira Conectada';
-            badge.className = 'px-2.5 py-0.5 bg-emerald-900/60 text-emerald-300 rounded-full text-[10px] font-bold border border-emerald-500/40';
-            badge.innerText = 'LIGHTNING ATIVA';
-
-            if (lud16) {
-                document.getElementById('lud16-text').innerText = lud16;
-                ludBanner.classList.remove('hidden');
-            } else {
-                ludBanner.classList.add('hidden');
-            }
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          tabHiddenAt = Date.now();
         } else {
-            ind.className = 'w-2.5 h-2.5 rounded-full bg-red-500 inline-block animate-pulse';
-            lbl.innerText = 'Carteira Desconectada';
-            badge.className = 'px-2.5 py-0.5 bg-red-900/60 text-red-300 rounded-full text-[10px] font-bold border border-red-500/40';
-            badge.innerText = 'DESCONECTADO';
-            ludBanner.classList.add('hidden');
+          if (tabHiddenAt && (Date.now() - tabHiddenAt > TAB_HIDDEN_LOCK_MS)) {
+            lockSession('Aba oculta por muito tempo');
+          }
+          tabHiddenAt = null;
+          resetIdleTimer();
+
+          // Auto-sync de nostr_pay ao reabrir a janela
+          if (nwcParsed) {
+            refreshNwcBalance();
+          }
         }
+      });
     }
 
-    function copyLud16() {
-        if (!appState.nwcParams || !appState.nwcParams.lud16) return;
-        navigator.clipboard.writeText(appState.nwcParams.lud16);
-        alert('Endereço Lightning copiado!');
+    function setupDelegation() {
+      document.getElementById('homeRecentTransactions')?.addEventListener('click', e => {
+        const el = e.target.closest('[data-tx-id]');
+        if (el) openComprovanteForTx(el.dataset.txId);
+      });
+      document.getElementById('extratoFullList')?.addEventListener('click', e => {
+        const el = e.target.closest('[data-tx-id]');
+        if (el) openComprovanteForTx(el.dataset.txId);
+      });
+      document.getElementById('contactsChatList')?.addEventListener('click', e => {
+        const el = e.target.closest('[data-contact-id]');
+        if (el) openActiveChat(el.dataset.contactId);
+      });
+      document.getElementById('pixContactsQuickSelect')?.addEventListener('click', e => {
+        const el = e.target.closest('[data-contact-id]');
+        if (el) selectPixContact(el.dataset.contactId);
+      });
+      document.getElementById('chatMessagesContainer')?.addEventListener('click', e => {
+        const txEl = e.target.closest('[data-tx-id]');
+        if (txEl) { openComprovanteForTx(txEl.dataset.txId); return; }
+        const spk = e.target.closest('[data-speak-idx]');
+        if (spk) {
+          const msgs = appState.chats[activeChatContactId] || [];
+          const m = msgs[parseInt(spk.dataset.speakIdx, 10)];
+          if (m) speakText(m.text);
+        }
+      });
+      document.getElementById('fiadoListContainer')?.addEventListener('click', e => {
+        const el = e.target.closest('[data-fiado-action]');
+        if (!el) return;
+        if (el.dataset.fiadoAction === 'bill') sendWhatsAppBilling(el.dataset.fiadoId);
+        if (el.dataset.fiadoAction === 'settle') settleFiado(el.dataset.fiadoId);
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          document.querySelectorAll('[role="dialog"]:not(.hidden)').forEach(m => m.classList.add('hidden'));
+        }
+      });
+    }
+
+    /* ============================================================
+       ESTADO & PERSISTÊNCIA
+       ============================================================ */
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STATE_KEY) || localStorage.getItem('zappix_app_state_v4');
+        if (!raw) return clone(defaultState);
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object' || !parsed.user) return clone(defaultState);
+        return Object.assign(clone(defaultState), parsed);
+      } catch (e) {
+        console.error('loadState', e);
+        return clone(defaultState);
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STATE_KEY, JSON.stringify(appState));
+      } catch (e) {
+        console.error('saveState', e);
+        showToast('Erro ao salvar dados locais', 'error');
+      }
+      renderAllViews();
+    }
+
+    function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+    /* ============================================================
+       CÂMBIO BITCOIN / REAL AO VIVO
+       ============================================================ */
+    async function fetchBtcPrice() {
+      try {
+        const res = await fetch('https://economia.awesomeapi.com.br/last/BTC-BRL');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.BTCBRL && data.BTCBRL.bid) {
+            btcBrlPrice = parseFloat(data.BTCBRL.bid);
+            const rateEl = document.getElementById('btcBrlRate');
+            if (rateEl) rateEl.innerText = `1 BTC = R$ ${formatMoney(btcBrlPrice)}`;
+            updateSatsEquivalentDisplays();
+          }
+        }
+      } catch (e) {
+        console.warn('Erro ao carregar taxa BTC/BRL:', e);
+      }
+    }
+
+    function satsToBrl(sats) {
+      return (Number(sats || 0) / 100000000) * btcBrlPrice;
+    }
+    function brlToSats(brl) {
+      return Math.round((Number(brl || 0) / btcBrlPrice) * 100000000);
+    }
+
+    function updateSatsEquivalentDisplays() {
+      const el = document.getElementById('homeSatsBrlEquivalent');
+      if (el) {
+        const brl = satsToBrl(appState.user.satsBalance || 0);
+        el.innerText = `(≈ R$ ${formatMoney(brl)})`;
+      }
+      const posVal = parseFloat(posCurrentAmountStr) / 100;
+      const posSatsEl = document.getElementById('posSatsEquivalent');
+      if (posSatsEl) {
+        posSatsEl.innerText = `(~${brlToSats(posVal).toLocaleString('pt-BR')} sats)`;
+      }
+    }
+
+    /* ============================================================
+       INTEGRAÇÃO NWC LIGHTNING (NIP-47)
+       ============================================================ */
+    function parseNwcUrl(uri) {
+      try {
+        const url = new URL(uri);
+        if (url.protocol !== 'nostr+walletconnect:' && url.protocol !== 'nostr:') return null;
+        const walletPubkey = url.hostname || url.pathname.replace(/^\/\//, '');
+        const relay = url.searchParams.get('relay');
+        const secret = url.searchParams.get('secret');
+        const lud16 = url.searchParams.get('lud16') || '';
+        if (!walletPubkey || !relay || !secret) return null;
+        return { walletPubkey, relay, secret, lud16 };
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function initNwcFromState() {
+      if (!appState.user.nwcUrl) {
+        updateNwcStatusUI(false, 'Modo Pix / Demonstração');
+        return;
+      }
+      const parsed = parseNwcUrl(appState.user.nwcUrl);
+      if (!parsed) {
+        updateNwcStatusUI(false, 'NWC Inválido');
+        return;
+      }
+      nwcParsed = parsed;
+      connectNwcRelay();
+    }
+
+    function connectNwcRelay() {
+      if (!nwcParsed) return;
+      try {
+        if (nwcRelaySocket) {
+          nwcRelaySocket.close();
+        }
+        nwcRelaySocket = new WebSocket(nwcParsed.relay);
+
+        nwcRelaySocket.onopen = () => {
+          updateNwcStatusUI(true, '⚡ Lightning Conectada');
+          subscribeNwcResponses();
+          refreshNwcBalance();
+          fetchNwcInfo();
+        };
+
+        nwcRelaySocket.onmessage = async (msg) => {
+          try {
+            const data = JSON.parse(msg.data);
+            if (Array.isArray(data) && data[0] === 'EVENT' && data[2]) {
+              handleNwcResponseEvent(data[2]);
+            }
+          } catch (e) {
+            console.error('Erro ao ler msg NWC:', e);
+          }
+        };
+
+        nwcRelaySocket.onerror = (e) => {
+          console.warn('WebSocket NWC erro:', e);
+          updateNwcStatusUI(false, 'Erro Conexão Lightning');
+        };
+
+        nwcRelaySocket.onclose = () => {
+          updateNwcStatusUI(false, 'Lightning Desconectada');
+        };
+      } catch (e) {
+        console.error('Falha ao conectar NWC Relay:', e);
+      }
+    }
+
+    function updateNwcStatusUI(connected, text) {
+      const dot = document.getElementById('nwcStatusDot');
+      const label = document.getElementById('nwcStatusLabel');
+      const badge = document.getElementById('nwcModalBadge');
+      if (dot) dot.className = `w-2 h-2 rounded-full inline-block ${connected ? 'bg-emerald-400' : 'bg-amber-400'} animate-pulse`;
+      if (label) label.innerText = text;
+      if (badge) {
+        badge.innerText = connected ? 'Conectado ⚡' : 'Desconectado';
+        badge.className = `text-[9px] px-2 py-0.5 rounded font-bold ${connected ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-200 text-amber-900'}`;
+      }
+      const ludBanner = document.getElementById('lud16Banner');
+      if (ludBanner) {
+        if (connected && appState.user.lud16) {
+          ludBanner.classList.remove('hidden');
+          document.getElementById('lud16Text').innerText = appState.user.lud16;
+        } else {
+          ludBanner.classList.add('hidden');
+        }
+      }
     }
 
     async function sendNwcRequest(method, params = {}) {
-        if (!appState.nwcParams) throw new Error('Conecte sua carteira primeiro nas configurações.');
+      if (!nwcParsed || !nwcRelaySocket || nwcRelaySocket.readyState !== WebSocket.OPEN) {
+        throw new Error('NWC não conectado ao relay.');
+      }
+      if (typeof window.NostrTools === 'undefined') {
+        throw new Error('Biblioteca nostr-tools indisponível.');
+      }
 
-        const { walletPubkey, relay, secret } = appState.nwcParams;
-        const clientPrivKey = secret;
-        const clientPubKey = window.NostrTools.getPublicKey(clientPrivKey);
+      const clientSecretBytes = NostrTools.hexToBytes(nwcParsed.secret);
+      const payloadString = JSON.stringify({ method, params });
+      const encryptedContent = await NostrTools.nip04.encrypt(clientSecretBytes, nwcParsed.walletPubkey, payloadString);
 
-        const payload = JSON.stringify({ method, params });
-        const encryptedContent = await window.NostrTools.nip04.encrypt(clientPrivKey, walletPubkey, payload);
+      const eventTemplate = {
+        kind: 23194,
+        created_at: Math.floor(Date.now() / 1000),
+        tags: [['p', nwcParsed.walletPubkey]],
+        content: encryptedContent
+      };
 
-        const reqEvent = {
-            kind: 23194,
-            created_at: Math.floor(Date.now() / 1000),
-            tags: [['p', walletPubkey]],
-            content: encryptedContent
+      const signedEvent = NostrTools.finalizeEvent(eventTemplate, clientSecretBytes);
+
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          nwcPendingRequests.delete(signedEvent.id);
+          reject(new Error('Tempo esgotado aguardando resposta NWC (30s)'));
+        }, 30000);
+
+        nwcPendingRequests.set(signedEvent.id, { resolve, reject, timeout });
+        nwcRelaySocket.send(JSON.stringify(['EVENT', signedEvent]));
+      });
+    }
+
+    function subscribeNwcResponses() {
+      if (!nwcParsed || !nwcRelaySocket) return;
+      const clientPubkey = NostrTools.getPublicKey(NostrTools.hexToBytes(nwcParsed.secret));
+      const subId = 'nwc_resp_' + Math.random().toString(36).substring(2, 8);
+      const filter = {
+        kinds: [23195],
+        authors: [nwcParsed.walletPubkey],
+        '#p': [clientPubkey],
+        since: Math.floor(Date.now() / 1000) - 10
+      };
+      nwcRelaySocket.send(JSON.stringify(['REQ', subId, filter]));
+    }
+
+    async function handleNwcResponseEvent(event) {
+      if (!nwcParsed) return;
+      try {
+        const clientSecretBytes = NostrTools.hexToBytes(nwcParsed.secret);
+        const decrypted = await NostrTools.nip04.decrypt(clientSecretBytes, event.pubkey, event.content);
+        const response = JSON.parse(decrypted);
+
+        const eTag = (event.tags || []).find(t => t[0] === 'e');
+        const reqId = eTag ? eTag[1] : null;
+
+        if (reqId && nwcPendingRequests.has(reqId)) {
+          const { resolve, reject, timeout } = nwcPendingRequests.get(reqId);
+          clearTimeout(timeout);
+          nwcPendingRequests.delete(reqId);
+
+          if (response.error) {
+            reject(new Error(response.error.message || 'Erro NWC retornado pelo nó'));
+          } else {
+            resolve(response.result);
+          }
+        }
+      } catch (e) {
+        console.error('Falha ao descriptografar resposta NWC:', e);
+      }
+    }
+
+    async function refreshNwcBalance() {
+      if (!nwcParsed) return;
+      const icon = document.getElementById('refreshBalanceIcon');
+      if (icon) icon.classList.add('fa-spin');
+      try {
+        const res = await sendNwcRequest('get_balance');
+        if (res && res.balance != null) {
+          appState.user.satsBalance = Math.floor(res.balance / 1000); // msats -> sats
+          saveState();
+        }
+      } catch (e) {
+        console.warn('Erro ao atualizar saldo NWC:', e.message);
+      } finally {
+        if (icon) icon.classList.remove('fa-spin');
+      }
+    }
+
+    async function fetchNwcInfo() {
+      if (!nwcParsed) return;
+      try {
+        const res = await sendNwcRequest('get_info');
+        if (res && res.lud16) {
+          appState.user.lud16 = res.lud16;
+          saveState();
+        }
+      } catch (e) {
+        console.warn('Erro get_info NWC:', e);
+      }
+    }
+
+    function saveNwcConnection() {
+      const input = document.getElementById('nwcConnectionInput');
+      const val = input.value.trim();
+      if (!val) {
+        showToast('Cole uma URL NWC válida', 'error');
+        return;
+      }
+      const parsed = parseNwcUrl(val);
+      if (!parsed) {
+        showToast('URL NWC inválida. Verifique o formato nostr+walletconnect://', 'error');
+        return;
+      }
+      appState.user.nwcUrl = val;
+      if (parsed.lud16) appState.user.lud16 = parsed.lud16;
+      saveState();
+      nwcParsed = parsed;
+      connectNwcRelay();
+      showToast('Conectando à carteira Lightning...', 'success');
+      closeModal('profileModal');
+    }
+
+    function disconnectNwc() {
+      appState.user.nwcUrl = '';
+      appState.user.satsBalance = 0;
+      appState.user.lud16 = '';
+      saveState();
+      if (nwcRelaySocket) {
+        try { nwcRelaySocket.close(); } catch (e) {}
+        nwcRelaySocket = null;
+      }
+      nwcParsed = null;
+      updateNwcStatusUI(false, 'Modo Pix / Demonstração');
+      showToast('Carteira Lightning desconectada', 'info');
+      closeModal('profileModal');
+    }
+
+    function copyLud16() {
+      if (!appState.user.lud16) return;
+      copyToClipboard(appState.user.lud16);
+      speakText('Endereço Lightning copiado!');
+      showToast('Lightning Address copiado: ' + appState.user.lud16, 'success');
+    }
+
+    /* ============================================================
+       PIN COM HASH SALGADO & RATE LIMIT
+       ============================================================ */
+    async function hashPin(pin, salt) {
+      const data = salt + ':' + pin;
+      if (window.crypto && window.crypto.subtle) {
+        try {
+          const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data));
+          return 'sha256:' + Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+        } catch (e) {}
+      }
+      let h = 0x811c9dc5;
+      for (let i = 0; i < data.length; i++) { h ^= data.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+      return 'fallback:' + h.toString(16).padStart(8, '0');
+    }
+
+    function randomSalt() {
+      const b = new Uint8Array(16);
+      if (window.crypto && window.crypto.getRandomValues) crypto.getRandomValues(b);
+      else for (let i = 0; i < 16; i++) b[i] = Math.floor(Math.random() * 256);
+      return Array.from(b).map(x => x.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function ensurePinReady() {
+      if (!appState.user.pinHash) {
+        const salt = randomSalt();
+        appState.user.pinSalt = salt;
+        appState.user.pinHash = await hashPin('1234', salt);
+        appState.user.pinFailedAttempts = 0;
+        appState.user.pinLockedUntil = 0;
+        saveState();
+      }
+    }
+
+    async function verifyPin(pin) {
+      if (appState.user.pinLockedUntil && Date.now() < appState.user.pinLockedUntil) {
+        return { ok: false, locked: true };
+      }
+      const h = await hashPin(pin, appState.user.pinSalt || '');
+      return { ok: h === appState.user.pinHash, locked: false };
+    }
+
+    function checkRateLimit(amount) {
+      const now = Date.now();
+      for (let i = txRateHistory.length - 1; i >= 0; i--) {
+        if (now - txRateHistory[i].timestamp > 86400000) txRateHistory.splice(i, 1);
+      }
+      if (amount > RATE_LIMITS.maxPerTx) {
+        return { ok: false, reason: `Limite por transação: R$ ${formatMoney(RATE_LIMITS.maxPerTx)}` };
+      }
+      const lastMin = txRateHistory.filter(t => now - t.timestamp < 60000);
+      if (lastMin.length >= RATE_LIMITS.maxPerMinute) {
+        return { ok: false, reason: 'Muitas transações rápidas. Aguarde 1 minuto.' };
+      }
+      const todayTotal = txRateHistory.reduce((s, t) => s + t.amount, 0);
+      if (todayTotal + amount > RATE_LIMITS.maxPerDay) {
+        return { ok: false, reason: `Limite diário: R$ ${formatMoney(RATE_LIMITS.maxPerDay)}` };
+      }
+      return { ok: true };
+    }
+
+    function recordTransaction(amount) {
+      txRateHistory.push({ timestamp: Date.now(), amount });
+    }
+
+    /* ============================================================
+       SESSÃO & AUTO-LOCK
+       ============================================================ */
+    function resetIdleTimer() {
+      if (isLocked) return;
+      clearTimeout(sessionIdleTimer);
+      sessionIdleTimer = setTimeout(() => lockSession('Inatividade'), SESSION_TIMEOUT_MS);
+    }
+
+    function lockSession(reason) {
+      if (isLocked) return;
+      isLocked = true;
+      clearTimeout(sessionIdleTimer);
+      currentPinInput = '';
+      updatePinDots();
+      const ls = document.getElementById('lockScreen');
+      if (ls) {
+        ls.classList.remove('hidden');
+        ls.classList.add('flex');
+      }
+      document.getElementById('lockReason').innerText = reason === 'Inatividade' ? 'Sua sessão expirou por inatividade.' : (reason || 'Sessão bloqueada.');
+      speakText('Sessão bloqueada. Digite seu PIN.');
+    }
+
+    async function unlockSessionUI() {
+      const pin = prompt('Digite seu PIN de 4 dígitos:');
+      if (!pin) return;
+      const r = await verifyPin(pin);
+      if (r.ok) {
+        isLocked = false;
+        appState.user.pinFailedAttempts = 0;
+        appState.user.pinLockedUntil = 0;
+        saveState();
+        const ls = document.getElementById('lockScreen');
+        if (ls) {
+          ls.classList.add('hidden');
+          ls.classList.remove('flex');
+        }
+        resetIdleTimer();
+        speakText('Sessão desbloqueada.');
+        showToast('Sessão desbloqueada', 'success');
+      } else if (r.locked) {
+        showToast('Bloqueado por tentativas. Aguarde.', 'error');
+      } else {
+        showToast('PIN incorreto', 'error');
+      }
+    }
+
+    function manualLock() {
+      closeModal('profileModal');
+      lockSession('Bloqueio manual');
+    }
+
+    /* ============================================================
+       RENDERIZAÇÃO DAS TELAS
+       ============================================================ */
+    function renderAllViews() {
+      const balEl = document.getElementById('homeBalanceDisplay');
+      if (balEl) balEl.innerText = isBalanceVisible ? formatMoney(appState.user.balance) : '••••••';
+
+      const satsEl = document.getElementById('homeSatsDisplay');
+      if (satsEl) satsEl.innerText = isBalanceVisible ? (appState.user.satsBalance || 0).toLocaleString('pt-BR') : '••••';
+
+      if (appState.user.seuPedroMode) document.body.classList.add('seu-pedro-mode');
+      else document.body.classList.remove('seu-pedro-mode');
+
+      const btn = document.getElementById('seuPedroBtn');
+      if (btn) btn.innerText = appState.user.seuPedroMode ? 'Desativar' : 'Ativar';
+
+      const v = document.getElementById('voiceToggleBtn');
+      if (v) v.className = appState.user.voiceGuide ? 'p-2 rounded-full bg-zappix-yellow text-zappix-darkgreen text-sm shadow' : 'p-2 rounded-full bg-emerald-700/60 text-white text-sm';
+
+      renderRecentHomeTransactions();
+      renderChatsList();
+      renderExtratoList();
+      renderFiadoList();
+      populateProfileInputs();
+      updateSatsEquivalentDisplays();
+    }
+
+    function toggleBalanceVisibility() {
+      isBalanceVisible = !isBalanceVisible;
+      const eye = document.getElementById('balanceEyeIcon');
+      if (eye) eye.className = isBalanceVisible ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+      renderAllViews();
+    }
+
+    function toggleSeuPedroMode() {
+      appState.user.seuPedroMode = !appState.user.seuPedroMode;
+      saveState();
+      speakText(appState.user.seuPedroMode ? 'Modo Seu Pedro ativado' : 'Modo normal restaurado');
+    }
+
+    function toggleVoiceGuide() {
+      appState.user.voiceGuide = !appState.user.voiceGuide;
+      saveState();
+      if (appState.user.voiceGuide) speakText('Voz guia ativada');
+    }
+
+    function switchView(viewId) {
+      document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
+      const t = document.getElementById(viewId);
+      if (t) t.classList.remove('hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(b => {
+        b.classList.remove('text-zappix-green');
+        b.classList.add('text-slate-400');
+        b.removeAttribute('aria-current');
+      });
+      const a = document.getElementById('nav-' + viewId);
+      if (a) {
+        a.classList.remove('text-slate-400');
+        a.classList.add('text-zappix-green');
+        a.setAttribute('aria-current', 'page');
+      }
+    }
+
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove('hidden');
+      const f = el.querySelector('input, button');
+      if (f) setTimeout(() => f.focus(), 50);
+    }
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    }
+
+    /* ============================================================
+       HOME: ÚLTIMAS TRANSAÇÕES
+       ============================================================ */
+    function renderRecentHomeTransactions() {
+      const c = document.getElementById('homeRecentTransactions');
+      if (!c) return;
+      const r = appState.transactions.slice(0, 4);
+      if (r.length === 0) {
+        c.innerHTML = `<p class="text-xs text-slate-400 text-center py-3">Nenhuma movimentação ainda.</p>`;
+        return;
+      }
+      c.innerHTML = r.map(tx => {
+        const rec = tx.type === 'received';
+        const isSats = tx.currency === 'SATS';
+        return `
+          <div data-tx-id="${safeId(tx.id)}" role="button" tabindex="0"
+               class="bg-slate-50 hover:bg-slate-100 p-2.5 rounded-xl border border-slate-200/80 flex items-center justify-between cursor-pointer touch-active">
+            <div class="flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-full ${rec ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'} flex items-center justify-center font-bold text-sm">
+                <i class="fa-solid ${rec ? 'fa-arrow-down' : 'fa-arrow-up'}" aria-hidden="true"></i>
+              </div>
+              <div class="truncate">
+                <h4 class="font-bold text-xs text-slate-800 truncate">${escapeHtml(tx.name)}</h4>
+                <p class="text-[10px] text-slate-400">${escapeHtml((tx.date || '').split(' ')[0])} · ${isSats ? '⚡ Lightning' : 'Pix'}</p>
+              </div>
+            </div>
+            <span class="font-extrabold text-xs ${rec ? 'text-emerald-600' : 'text-slate-800'} whitespace-nowrap">
+              ${rec ? '+' : '-'} ${isSats ? `${tx.amount} sats` : `R$ ${formatMoney(tx.amount)}`}
+            </span>
+          </div>`;
+      }).join('');
+    }
+
+    /* ============================================================
+       PIX / LIGHTNING MODAL (ENVIAR)
+       ============================================================ */
+    function openPixModal() {
+      currentPixDraft = { recipientName: '', recipientKey: '', recipientBank: 'ZapPix', amount: 0, isLightning: false, bolt11: '', memo: '' };
+      document.getElementById('pixStep1').classList.remove('hidden');
+      document.getElementById('pixStep2').classList.add('hidden');
+      document.getElementById('pixStep3').classList.add('hidden');
+      document.getElementById('pixKeyInput').value = '';
+      document.getElementById('pixAmountInput').value = '';
+      document.getElementById('pixInvoiceMemoBox').classList.add('hidden');
+      renderQuickSelectContacts();
+      openModal('pixModal');
+    }
+
+    function renderQuickSelectContacts() {
+      const q = document.getElementById('pixContactsQuickSelect');
+      if (!q) return;
+      q.innerHTML = appState.contacts.map(c => `
+        <div data-contact-id="${safeId(c.id)}" role="button" tabindex="0"
+             class="p-2 rounded-lg bg-slate-50 hover:bg-emerald-50 border border-slate-200 flex items-center justify-between cursor-pointer">
+          <div class="flex items-center space-x-2 truncate">
+            <span class="text-base" aria-hidden="true">${escapeHtml(c.avatar || '👤')}</span>
+            <div class="truncate">
+              <p class="font-bold text-xs text-slate-800 truncate">${escapeHtml(c.name)}</p>
+              <p class="text-[10px] text-slate-400 font-mono truncate">${escapeHtml(c.key)}</p>
+            </div>
+          </div>
+          <span class="text-[10px] bg-slate-200 text-slate-700 font-bold px-2 py-0.5 rounded">Escolher</span>
+        </div>`).join('');
+    }
+
+    function selectPixContact(id) {
+      const c = appState.contacts.find(x => x.id === id);
+      if (!c) return;
+      currentPixDraft.recipientName = c.name;
+      currentPixDraft.recipientKey = c.key;
+      currentPixDraft.recipientBank = c.bank || 'ZapPix';
+      goToPixStep2();
+    }
+
+    function extractBolt11Memo(invoice) {
+      try {
+        const lower = invoice.toLowerCase();
+        const parts = lower.split('1');
+        if (parts.length > 1) {
+          const rest = parts.slice(1).join('1');
+          const dIdx = rest.indexOf('p');
+          // Tentativa simplificada de memo
+          return 'Pagamento Lightning';
+        }
+      } catch (e) {}
+      return '';
+    }
+
+    function goToPixStep2() {
+      const k = document.getElementById('pixKeyInput').value.trim();
+      if (!currentPixDraft.recipientName && k) {
+        currentPixDraft.recipientKey = k;
+        if (k.toLowerCase().startsWith('lnbc')) {
+          currentPixDraft.isLightning = true;
+          currentPixDraft.bolt11 = k;
+          currentPixDraft.recipientName = 'Invoice Lightning';
+          currentPixDraft.recipientBank = 'Rede Bitcoin Lightning ⚡';
+          const memo = extractBolt11Memo(k);
+          if (memo) currentPixDraft.memo = memo;
+        } else {
+          const f = appState.contacts.find(c => c.key.toLowerCase() === k.toLowerCase());
+          if (f) {
+            currentPixDraft.recipientName = f.name;
+            currentPixDraft.recipientBank = f.bank || 'ZapPix';
+          } else {
+            currentPixDraft.recipientName = 'Destinatário Pix (' + (k.includes('@') ? 'E-mail / LUD16' : 'Chave Externa') + ')';
+            currentPixDraft.recipientBank = 'Instituição Financeira';
+          }
+        }
+      }
+
+      if (!currentPixDraft.recipientKey) {
+        showToast('Informe uma chave Pix ou invoice válida', 'error');
+        return;
+      }
+
+      document.getElementById('pixRecipientNameDisplay').innerText = currentPixDraft.recipientName;
+      document.getElementById('pixRecipientKeyDisplay').innerText = 'Chave: ' + currentPixDraft.recipientKey;
+
+      if (currentPixDraft.isLightning && currentPixDraft.memo) {
+        document.getElementById('pixInvoiceMemoText').innerText = currentPixDraft.memo;
+        document.getElementById('pixInvoiceMemoBox').classList.remove('hidden');
+      } else {
+        document.getElementById('pixInvoiceMemoBox').classList.add('hidden');
+      }
+
+      const label = document.getElementById('pixAmountLabel');
+      const prefix = document.getElementById('pixCurrencyPrefix');
+      if (currentPixDraft.isLightning) {
+        label.innerText = 'VALOR A PAGAR (SATOSHIS ⚡)';
+        prefix.innerText = '⚡';
+      } else {
+        label.innerText = 'VALOR A TRANSFERIR (R$)';
+        prefix.innerText = 'R$';
+      }
+
+      document.getElementById('pixStep1').classList.add('hidden');
+      document.getElementById('pixStep2').classList.remove('hidden');
+    }
+
+    function backToPixStep1() {
+      document.getElementById('pixStep2').classList.add('hidden');
+      document.getElementById('pixStep1').classList.remove('hidden');
+    }
+
+    function goToPixStep3() {
+      const amt = parseFloat(document.getElementById('pixAmountInput').value);
+      if (isNaN(amt) || amt <= 0) {
+        showToast('Informe um valor maior que zero', 'error');
+        return;
+      }
+
+      if (currentPixDraft.isLightning) {
+        if (nwcParsed && amt > (appState.user.satsBalance || 0)) {
+          showToast('Saldo em Satoshis insuficiente na carteira Lightning', 'error');
+          return;
+        }
+      } else {
+        if (amt > appState.user.balance) {
+          showToast('Saldo em Reais insuficiente', 'error');
+          return;
+        }
+        const rateCheck = checkRateLimit(amt);
+        if (!rateCheck.ok) {
+          showToast(rateCheck.reason, 'error');
+          return;
+        }
+      }
+
+      currentPixDraft.amount = amt;
+      const known = appState.contacts.some(c => c.key === currentPixDraft.recipientKey);
+      const high = currentPixDraft.isLightning ? amt >= 50000 : amt >= 500;
+      const box = document.getElementById('antiScamAlertBox');
+      if (!known || high) {
+        box.classList.remove('hidden');
+        speakText('Atenção! Contato novo ou valor alto.');
+      } else {
+        box.classList.add('hidden');
+      }
+
+      document.getElementById('pixConfirmAmountText').innerText = currentPixDraft.isLightning ? `${amt} sats ⚡` : `R$ ${formatMoney(amt)}`;
+      currentPinInput = '';
+      updatePinDots();
+      document.getElementById('pinLockMessage').classList.add('hidden');
+      document.getElementById('pixStep2').classList.add('hidden');
+      document.getElementById('pixStep3').classList.remove('hidden');
+    }
+
+    function pressPinKey(n) {
+      if (appState.user.pinLockedUntil && Date.now() < appState.user.pinLockedUntil) {
+        const rem = Math.ceil((appState.user.pinLockedUntil - Date.now()) / 1000);
+        showPinLock(`Bloqueado. Aguarde ${rem}s.`);
+        return;
+      }
+      if (currentPinInput.length < 4) {
+        currentPinInput += n;
+        updatePinDots();
+        if (currentPinInput.length === 4) setTimeout(verifyAndExecutePix, 150);
+      }
+    }
+    function clearPin() { currentPinInput = ''; updatePinDots(); }
+    function backspacePin() { currentPinInput = currentPinInput.slice(0, -1); updatePinDots(); }
+    function updatePinDots() {
+      for (let i = 0; i < 4; i++) {
+        const d = document.getElementById('pinDot' + i);
+        if (!d) continue;
+        d.className = i < currentPinInput.length
+          ? 'w-4 h-4 rounded-full bg-zappix-green border-2 border-zappix-green'
+          : 'w-4 h-4 rounded-full border-2 border-slate-300 bg-white';
+      }
+    }
+    function showPinLock(msg) {
+      const el = document.getElementById('pinLockMessage');
+      if (el) { el.innerText = msg; el.classList.remove('hidden'); }
+    }
+
+    async function verifyAndExecutePix() {
+      if (pinVerifying) return;
+      pinVerifying = true;
+      try {
+        const now = Date.now();
+        if (appState.user.pinLockedUntil && now < appState.user.pinLockedUntil) {
+          showPinLock(`Bloqueado. Aguarde ${Math.ceil((appState.user.pinLockedUntil - now)/1000)}s.`);
+          clearPin();
+          return;
+        }
+
+        const r = await verifyPin(currentPinInput);
+        if (!r.ok) {
+          appState.user.pinFailedAttempts = (appState.user.pinFailedAttempts || 0) + 1;
+          if (appState.user.pinFailedAttempts >= 3) {
+            appState.user.pinLockedUntil = now + 30000;
+            appState.user.pinFailedAttempts = 0;
+            saveState();
+            showPinLock('PIN incorreto 3x. Bloqueado por 30s.');
+            speakText('Bloqueado por segurança.');
+            showToast('Bloqueado por 30 segundos', 'error');
+          } else {
+            showPinLock(`PIN incorreto. Tentativa ${appState.user.pinFailedAttempts}/3.`);
+            showToast('PIN incorreto', 'error');
+          }
+          saveState();
+          clearPin();
+          return;
+        }
+
+        appState.user.pinFailedAttempts = 0;
+        appState.user.pinLockedUntil = 0;
+
+        // Se for pagamento Lightning via NWC
+        if (currentPixDraft.isLightning && nwcParsed) {
+          showToast('Enviando pagamento via Lightning...', 'info');
+          try {
+            await sendNwcRequest('pay_invoice', { invoice: currentPixDraft.bolt11 });
+            appState.user.satsBalance = Math.max(0, (appState.user.satsBalance || 0) - currentPixDraft.amount);
+            showToast('⚡ Pagamento Lightning confirmado na rede!', 'success');
+          } catch (err) {
+            showToast('Falha no pagamento Lightning: ' + err.message, 'error');
+            clearPin();
+            return;
+          }
+        } else {
+          // Pagamento Pix (saldo R$)
+          appState.user.balance -= currentPixDraft.amount;
+          recordTransaction(currentPixDraft.amount);
+        }
+
+        const newTx = {
+          id: 'tx_' + Date.now(),
+          type: 'sent',
+          amount: currentPixDraft.amount,
+          currency: currentPixDraft.isLightning ? 'SATS' : 'BRL',
+          date: formatLocalDateTime(),
+          name: currentPixDraft.recipientName,
+          key: currentPixDraft.recipientKey,
+          bank: currentPixDraft.recipientBank,
+          e2eId: generateE2EId(),
+          shaHash: generateFakeHash()
         };
 
-        const signedEvent = window.NostrTools.finalizeEvent(reqEvent, clientPrivKey);
+        appState.transactions.unshift(newTx);
 
-        return new Promise((resolve, reject) => {
-            const ws = new WebSocket(relay);
-            const timeout = setTimeout(() => {
-                ws.close();
-                reject(new Error('Tempo limite de resposta da carteira excedido.'));
-            }, 25000);
+        // Se for para um contato, adiciona no chat
+        const contact = appState.contacts.find(c => c.key === currentPixDraft.recipientKey);
+        if (contact) {
+          if (!appState.chats[contact.id]) appState.chats[contact.id] = [];
+          appState.chats[contact.id].push({
+            sender: 'me',
+            isPix: true,
+            amount: currentPixDraft.amount,
+            currency: currentPixDraft.isLightning ? 'SATS' : 'BRL',
+            txId: newTx.id,
+            text: currentPixDraft.isLightning ? `⚡ Lightning enviado: ${currentPixDraft.amount} sats` : `⚡ Pix enviado: R$ ${formatMoney(currentPixDraft.amount)}`,
+            time: formatTimeHM()
+          });
+        }
 
-            ws.onopen = () => {
-                const subId = 'nwc_' + Date.now();
-                ws.send(JSON.stringify(['REQ', subId, {
-                    kinds: [23195],
-                    authors: [walletPubkey],
-                    '#p': [clientPubKey],
-                    limit: 1
-                }]));
-                ws.send(JSON.stringify(['EVENT', signedEvent]));
-            };
-
-            ws.onmessage = async (e) => {
-                try {
-                    const msg = JSON.parse(e.data);
-                    if (msg[0] === 'EVENT' && msg[2] && msg[2].kind === 23195) {
-                        clearTimeout(timeout);
-                        const decrypted = await window.NostrTools.nip04.decrypt(clientPrivKey, walletPubkey, msg[2].content);
-                        const response = JSON.parse(decrypted);
-                        ws.close();
-
-                        if (response.error) {
-                            reject(new Error(response.error.message || 'Erro NWC'));
-                        } else {
-                            resolve(response.result);
-                        }
-                    }
-                } catch (err) {}
-            };
-
-            ws.onerror = (err) => {
-                clearTimeout(timeout);
-                reject(new Error('Falha de conexão com Relay NWC.'));
-            };
-        });
+        saveState();
+        closeModal('pixModal');
+        safeConfetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
+        speakText(`Pagamento de ${currentPixDraft.isLightning ? `${currentPixDraft.amount} satoshis` : `R$ ${formatMoney(currentPixDraft.amount)}`} concluído!`);
+        openComprovanteForTx(newTx.id);
+        resetIdleTimer();
+      } finally {
+        pinVerifying = false;
+      }
     }
 
-    async function syncWalletBalance(silent = false) {
-        if (!appState.nwcParams) return;
+    /* ============================================================
+       DEPOSITAR / RECEBER (PIX & LIGHTNING MAKE_INVOICE)
+       ============================================================ */
+    function setDepositMode(mode) {
+      currentDepositMode = mode;
+      const tabPix = document.getElementById('depTabPix');
+      const tabLn = document.getElementById('depTabLightning');
+      const label = document.getElementById('depositAmountLabel');
+      const prefix = document.getElementById('depositCurrencyPrefix');
+      const btn = document.getElementById('btnGenerateDeposit');
+
+      if (mode === 'pix') {
+        tabPix.className = 'py-2 rounded-lg bg-zappix-green text-white shadow';
+        tabLn.className = 'py-2 rounded-lg text-slate-600 hover:text-slate-900';
+        label.innerText = 'Informe o valor em Reais (R$)';
+        prefix.innerText = 'R$';
+        btn.innerText = 'Gerar QR Code Pix';
+      } else {
+        tabLn.className = 'py-2 rounded-lg bg-amber-500 text-gray-950 shadow';
+        tabPix.className = 'py-2 rounded-lg text-slate-600 hover:text-slate-900';
+        label.innerText = 'Informe o valor em Satoshis (sats ⚡)';
+        prefix.innerText = '⚡';
+        btn.innerText = 'Gerar Invoice Lightning';
+      }
+      document.getElementById('depositQrContainer').classList.add('hidden');
+    }
+
+    function openDepositModal() {
+      setDepositMode('pix');
+      document.getElementById('depositQrContainer').classList.add('hidden');
+      document.getElementById('depositQrElement').innerHTML = '';
+      openModal('depositModal');
+    }
+
+    async function generateDepositQR() {
+      const amt = parseFloat(document.getElementById('depositAmountInput').value) || 50;
+      let payload = '';
+
+      if (currentDepositMode === 'lightning' && nwcParsed) {
+        showToast('Gerando fatura Lightning via nó remoto...', 'info');
         try {
-            if (!silent) document.getElementById('nwc-status-label').innerText = 'Consultando...';
-            const res = await sendNwcRequest('get_balance');
-            if (res && res.balance != null) {
-                appState.balanceSats = Math.floor(res.balance / 1000);
-                updateBalanceDisplay();
-                setWalletConnectedUI(true, appState.nwcParams.lud16);
-            }
+          const res = await sendNwcRequest('make_invoice', {
+            amount: amt * 1000, // sats to msats
+            description: 'Recebimento ZapPix Zap'
+          });
+          payload = res.invoice;
+          startInvoiceWatcher(payload, amt);
         } catch (e) {
-            if (!silent) alert('Não foi possível sincronizar o saldo: ' + e.message);
+          showToast('Erro make_invoice NWC: ' + e.message, 'error');
+          return;
         }
+      } else {
+        payload = generateEmvCoPixPayload(appState.user.pixKey, appState.user.name, amt);
+      }
+
+      const qrEl = document.getElementById('depositQrElement');
+      if (safeQRCode(qrEl, { text: payload, width: 170, height: 170 })) {
+        document.getElementById('depositPixPayloadText').innerText = payload;
+        document.getElementById('depositQrContainer').classList.remove('hidden');
+      } else {
+        showToast('QR Code gerado. Use o botão Copiar Código.', 'error');
+      }
     }
 
-    // GERAÇÃO DE COBRANÇAS (RECEBER)
-    function setReceiveMode(mode) {
-        appState.activeReceiveMode = mode;
-        const btnL = document.getElementById('btn-mode-lightning');
-        const btnP = document.getElementById('btn-mode-pix');
-        const formL = document.getElementById('receive-lightning-form');
-        const formP = document.getElementById('receive-pix-form');
-
-        if (mode === 'lightning') {
-            btnL.className = 'flex-1 py-2.5 rounded-xl bg-amber-500 text-gray-950 shadow flex items-center justify-center gap-1.5 transition';
-            btnP.className = 'flex-1 py-2.5 rounded-xl text-gray-400 hover:text-white flex items-center justify-center gap-1.5 transition';
-            formL.classList.remove('hidden');
-            formP.classList.add('hidden');
-        } else {
-            btnP.className = 'flex-1 py-2.5 rounded-xl bg-emerald-600 text-white shadow flex items-center justify-center gap-1.5 transition';
-            btnL.className = 'flex-1 py-2.5 rounded-xl text-gray-400 hover:text-white flex items-center justify-center gap-1.5 transition';
-            formP.classList.remove('hidden');
-            formL.classList.add('hidden');
-        }
-        cancelActiveReceive();
-    }
-
-    function updateReceiveSatsPreview() {
-        const sats = parseInt(document.getElementById('lightning-amount-sats').value, 10) || 0;
-        const brl = (sats * (appState.btcBrlRate / 1e8)).toFixed(2);
-        document.getElementById('receive-sats-to-brl').innerText = `≈ R$ ${brl.replace('.', ',')}`;
-    }
-
-    // RECURSO DO NOSTR_PAY: MAKE_INVOICE DIRETO NO NÓ REMOTO
-    async function generateLightningInvoice() {
-        if (!appState.nwcParams) {
-            alert('Conecte sua carteira Lightning primeiro nas configurações.');
-            openConfigModal();
-            return;
-        }
-
-        const sats = parseInt(document.getElementById('lightning-amount-sats').value, 10);
-        if (!sats || sats <= 0) {
-            alert('Informe um valor em satoshis válido.');
-            return;
-        }
-
-        const desc = document.getElementById('lightning-desc').value.trim() || 'Venda ZapPix Balcão';
-        const btn = document.getElementById('btn-generate-lightning');
-        btn.disabled = true;
-        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Gerando Fatura no Nó...`;
-
+    function startInvoiceWatcher(invoice, satsAmount) {
+      if (posWatcherInterval) clearInterval(posWatcherInterval);
+      posWatcherInterval = setInterval(async () => {
+        if (!nwcParsed) { clearInterval(posWatcherInterval); return; }
         try {
-            const res = await sendNwcRequest('make_invoice', {
-                amount: sats * 1000, // em millisats
-                description: desc
+          const res = await sendNwcRequest('lookup_invoice', { invoice });
+          if (res && (res.settled_at || res.paid)) {
+            clearInterval(posWatcherInterval);
+            appState.user.satsBalance = (appState.user.satsBalance || 0) + satsAmount;
+            appState.transactions.unshift({
+              id: 'tx_' + Date.now(),
+              type: 'received',
+              amount: satsAmount,
+              currency: 'SATS',
+              date: formatLocalDateTime(),
+              name: 'Recebimento Lightning ⚡',
+              key: 'Rede Lightning',
+              bank: 'NWC Wallet',
+              e2eId: generateE2EId(),
+              shaHash: generateFakeHash()
             });
+            saveState();
+            closeModal('depositModal');
+            safeConfetti({ particleCount: 120, spread: 80 });
+            speakText(`Pagamento Lightning de ${satsAmount} satoshis recebido com sucesso!`);
+          }
+        } catch (e) {}
+      }, 3500);
+    }
 
-            if (!res || !res.invoice) throw new Error('O nó não retornou a fatura.');
+    function copyDepositPayload() {
+      const t = document.getElementById('depositPixPayloadText').innerText;
+      copyToClipboard(t);
+      speakText('Código copiado!');
+      showToast('Código copiado', 'success');
+    }
 
-            renderGeneratedQR(res.invoice, 'Fatura Lightning', sats, desc);
-            speakText(`Fatura Lightning de ${sats} satoshis gerada. Aguardando pagamento.`);
+    function simulateBankWebhookDeposit() {
+      const amt = parseFloat(document.getElementById('depositAmountInput').value) || 50.00;
+      if (currentDepositMode === 'lightning') {
+        appState.user.satsBalance = (appState.user.satsBalance || 0) + Math.round(amt);
+      } else {
+        appState.user.balance += amt;
+      }
 
-            // Inicia escuta automática de pagamento (lookup_invoice)
-            startInvoiceSettlementWatcher(res.invoice, sats, desc);
-        } catch (e) {
-            alert('Falha ao gerar fatura Lightning: ' + e.message);
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = `⚡ GERAR FATURA LIGHTNING`;
+      appState.transactions.unshift({
+        id: 'tx_' + Date.now(),
+        type: 'received',
+        amount: amt,
+        currency: currentDepositMode === 'lightning' ? 'SATS' : 'BRL',
+        date: formatLocalDateTime(),
+        name: currentDepositMode === 'lightning' ? 'Depósito Lightning (Simulado)' : 'Depósito Pix Recebido',
+        key: appState.user.pixKey,
+        bank: 'Banco Emissor',
+        e2eId: generateE2EId(),
+        shaHash: generateFakeHash()
+      });
+
+      saveState();
+      closeModal('depositModal');
+      safeConfetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      speakText(`Depósito recebido! ${currentDepositMode === 'lightning' ? `${amt} sats` : `R$ ${formatMoney(amt)}`} adicionados.`);
+    }
+
+    function generateEmvCoPixPayload(key, name, amount) {
+      const cleanKey = String(key).trim();
+      const cleanName = String(name || 'ZapPix').substring(0, 25)
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^A-Za-z0-9 .-]/g, '') || 'ZapPix';
+      const amtStr = Number(amount).toFixed(2);
+      const gui = 'BR.GOV.BCB.PIX';
+      const keyField = '01' + String(cleanKey.length).padStart(2, '0') + cleanKey;
+      const merchantInfo = '00' + String(gui.length).padStart(2, '0') + gui + keyField;
+      const field26 = '26' + String(merchantInfo.length).padStart(2, '0') + merchantInfo;
+      const payload = '000201' + field26 + '52040000' + '5303986' +
+        '54' + String(amtStr.length).padStart(2, '0') + amtStr +
+        '5802BR' + '59' + String(cleanName.length).padStart(2, '0') + cleanName +
+        '6009FORTALEZA' + '62070503***' + '6304';
+      return payload + crc16Ccitt(payload);
+    }
+
+    function crc16Ccitt(str) {
+      const bytes = new TextEncoder().encode(str);
+      let crc = 0xFFFF;
+      for (let i = 0; i < bytes.length; i++) {
+        crc ^= bytes[i] << 8;
+        for (let j = 0; j < 8; j++) {
+          crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+          crc &= 0xFFFF;
         }
+      }
+      return crc.toString(16).toUpperCase().padStart(4, '0');
     }
 
-    // RECURSO DO NOSTR_PAY: LOOKUP_INVOICE & SENSOR DE PAGAMENTO RECEBIDO
-    function startInvoiceSettlementWatcher(invoice, sats, desc) {
-        if (appState.activeInvoicePolling) clearInterval(appState.activeInvoicePolling);
-
-        appState.activeInvoicePolling = setInterval(async () => {
-            try {
-                const res = await sendNwcRequest('lookup_invoice', { invoice });
-                if (res && (res.settled_at != null || res.preimage != null)) {
-                    clearInterval(appState.activeInvoicePolling);
-                    appState.activeInvoicePolling = null;
-
-                    // Som de sucesso e confete!
-                    confetti({ particleCount: 140, spread: 80 });
-                    speakText(`Pagamento de ${sats} satoshis recebido com sucesso!`);
-
-                    document.getElementById('qr-status-indicator').innerHTML = `
-                        <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
-                        <span class="text-emerald-700 font-extrabold">PAGO COM SUCESSO!</span>
-                    `;
-
-                    // Registra no histórico
-                    const receipt = {
-                        id: res.preimage || 'in_' + Date.now(),
-                        date: new Date().toLocaleString('pt-BR'),
-                        amountSats: sats,
-                        amountBrl: (sats * (appState.btcBrlRate / 1e8)),
-                        type: `Recebido (+): ${desc}`
-                    };
-                    appState.receipts.unshift(receipt);
-                    localStorage.setItem('nostrpix_receipts', JSON.stringify(appState.receipts));
-
-                    renderReceipts();
-                    syncWalletBalance(true);
-                }
-            } catch (e) {
-                // continua escutando silenciosamente
-            }
-        }, 3500);
+    /* ============================================================
+       EXTRATO & EXPORTAÇÃO CSV
+       ============================================================ */
+    function setExtratoFilter(f) {
+      currentExtratoFilter = f;
+      ['all', 'sent', 'received'].forEach(x => {
+        const tab = document.getElementById('extratoTab-' + x);
+        if (!tab) return;
+        const active = x === f;
+        tab.className = active ? 'flex-1 py-2 text-center border-b-2 border-zappix-green text-zappix-green font-bold' : 'flex-1 py-2 text-center text-slate-500 hover:text-slate-800';
+        tab.setAttribute('aria-selected', String(active));
+      });
+      renderExtratoList();
     }
 
-    function cancelActiveReceive() {
-        if (appState.activeInvoicePolling) {
-            clearInterval(appState.activeInvoicePolling);
-            appState.activeInvoicePolling = null;
-        }
-        document.getElementById('generated-qr-box').classList.add('hidden');
+    function renderExtratoList() {
+      const c = document.getElementById('extratoFullList');
+      if (!c) return;
+      const search = (document.getElementById('extratoSearchInput')?.value || '').toLowerCase();
+      let list = appState.transactions;
+      if (currentExtratoFilter === 'sent') list = list.filter(t => t.type === 'sent');
+      if (currentExtratoFilter === 'received') list = list.filter(t => t.type === 'received');
+      if (search) {
+        list = list.filter(t =>
+          String(t.name || '').toLowerCase().includes(search) ||
+          String(t.key || '').toLowerCase().includes(search) ||
+          String(t.amount || '').includes(search)
+        );
+      }
+      if (list.length === 0) {
+        c.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhuma transação encontrada.</p>`;
+        return;
+      }
+      c.innerHTML = list.map(tx => {
+        const rec = tx.type === 'received';
+        const isSats = tx.currency === 'SATS';
+        return `
+          <div data-tx-id="${safeId(tx.id)}" role="button" tabindex="0"
+               class="bg-white hover:bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between cursor-pointer shadow-sm touch-active">
+            <div class="flex items-center space-x-3 truncate">
+              <div class="w-10 h-10 rounded-full ${rec ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'} flex items-center justify-center font-bold text-base">
+                <i class="fa-solid ${rec ? 'fa-arrow-down' : 'fa-arrow-up'}" aria-hidden="true"></i>
+              </div>
+              <div class="truncate">
+                <h4 class="font-extrabold text-xs text-slate-800 truncate">${escapeHtml(tx.name)}</h4>
+                <p class="text-[11px] text-slate-400 font-mono">${escapeHtml(tx.date)} · ${isSats ? '⚡ Lightning' : 'Pix'}</p>
+              </div>
+            </div>
+            <div class="text-right whitespace-nowrap">
+              <span class="font-black text-xs ${rec ? 'text-emerald-600' : 'text-slate-900'}">
+                ${rec ? '+' : '-'} ${isSats ? `${tx.amount} sats` : `R$ ${formatMoney(tx.amount)}`}
+              </span>
+              <p class="text-[9px] text-slate-400">Ver Comprovante</p>
+            </div>
+          </div>`;
+      }).join('');
     }
 
-    function renderGeneratedQR(payload, badgeLabel, sats = 0, desc = '') {
-        document.getElementById('qr-badge-type').innerText = badgeLabel;
-        document.getElementById('generated-payload-text').innerText = payload;
-        document.getElementById('qr-status-indicator').innerHTML = `
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Aguardando Pagamento...
-        `;
-
-        const target = document.getElementById('qrcode-target');
-        target.innerHTML = '';
-        new QRCode(target, { text: payload, width: 190, height: 190 });
-
-        document.getElementById('generated-qr-box').classList.remove('hidden');
+    function exportExtratoCSV() {
+      let csv = 'ID,Data,Tipo,Moeda,Nome,Chave,Valor,E2E\n';
+      appState.transactions.forEach(t => {
+        const row = [t.id, t.date, t.type, t.currency || 'BRL', t.name, t.key, t.amount, t.e2eId].map(v => `"${String(v ?? '').replace(/"/g, '""')}"`);
+        csv += row.join(',') + '\n';
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ZapPix_Extrato_${Date.now()}.csv`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast('Extrato CSV baixado', 'success');
     }
 
-    function copyGeneratedPayload() {
-        navigator.clipboard.writeText(document.getElementById('generated-payload-text').innerText);
-        alert('Código copiado com sucesso!');
+    /* ============================================================
+       COMPROVANTE DETALHADO & DOWNLOAD PNG
+       ============================================================ */
+    function openComprovanteForTx(id) {
+      const tx = appState.transactions.find(t => t.id === id);
+      if (!tx) return;
+      activeComprovanteTx = tx;
+
+      const isSats = tx.currency === 'SATS';
+      document.getElementById('compAmount').innerText = isSats ? `${tx.amount} sats ⚡` : `R$ ${formatMoney(tx.amount)}`;
+      document.getElementById('compDate').innerText = tx.date;
+      document.getElementById('compRecipientName').innerText = tx.name;
+      document.getElementById('compRecipientKey').innerText = 'Chave: ' + tx.key;
+      document.getElementById('compRecipientBank').innerText = 'Instituição: ' + (tx.bank || 'ZapPix');
+      document.getElementById('compSenderName').innerText = appState.user.name;
+      document.getElementById('compSenderCpf').innerText = 'CPF: ' + appState.user.cpf;
+      document.getElementById('compE2EId').innerText = tx.e2eId || 'E000000';
+      document.getElementById('compShaHash').innerText = tx.shaHash || 'hash';
+
+      openModal('comprovanteModal');
     }
 
-    // PIX BRCODE
-    function generatePixBRCode() {
-        const key = document.getElementById('pix-my-key').value.trim();
-        const name = document.getElementById('pix-my-name').value.trim() || 'SEU PEDRO';
-        const amt = parseFloat(document.getElementById('pix-my-amount').value) || 0;
-
-        if (!key) { alert('Informe sua chave Pix.'); return; }
-
-        const amtStr = amt > 0 ? amt.toFixed(2) : '';
-        const cleanName = name.substring(0, 25).normalize('NFD').replace(/[\u0300-\u06ff]/g, '');
-        const cleanKey = key.trim();
-
-        let payload = `00020126${String(cleanKey.length + 22).padStart(2,'0')}0014BR.GOV.BCB.PIX01${String(cleanKey.length).padStart(2,'0')}${cleanKey}520400005303986`;
-        if (amtStr) payload += `54${String(amtStr.length).padStart(2,'0')}${amtStr}`;
-        payload += `5802BR59${String(cleanName.length).padStart(2,'0')}${cleanName}6009FORTALEZA62070503***6304`;
-
-        let crc = 0xFFFF;
-        const bytes = new TextEncoder().encode(payload);
-        for (let i = 0; i < bytes.length; i++) {
-            crc ^= bytes[i] << 8;
-            for (let j = 0; j < 8; j++) {
-                crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
-                crc &= 0xFFFF;
-            }
-        }
-        const finalCode = payload + crc.toString(16).toUpperCase().padStart(4, '0');
-
-        renderGeneratedQR(finalCode, 'Código Pix BRCode');
-        speakText(`Código Pix de ${amt} reais gerado.`);
+    function speakComprovante() {
+      if (!activeComprovanteTx) return;
+      const isSats = activeComprovanteTx.currency === 'SATS';
+      speakText(`Comprovante ZapPix. Valor ${isSats ? `${activeComprovanteTx.amount} satoshis` : `${formatMoney(activeComprovanteTx.amount)} reais`}. Recebedor ${activeComprovanteTx.name}. Data ${activeComprovanteTx.date}.`);
     }
 
-    // PAGAMENTO E PROCESSAMENTO DE FATURA (COM LEITURA DE DESCRIÇÃO BOLT11)
-    function processInputCode() {
-        const text = document.getElementById('invoice-input').value.trim();
-        if (!text) { alert('Insira um código válido.'); return; }
-        handleDetectedCode(text);
+    function downloadComprovantePng() {
+      if (!activeComprovanteTx) return;
+      const canvas = document.getElementById('comprovanteCanvas');
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.fillStyle = '#00A859';
+      ctx.fillRect(0, 0, W, 140);
+
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#FFD600';
+      ctx.font = 'bold 36px sans-serif';
+      ctx.fillText('⚡ ZapPix S.A.', 40, 60);
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '22px sans-serif';
+      ctx.fillText('Comprovante de Pagamento & Transferência', 40, 100);
+
+      ctx.fillStyle = '#F8FAFC';
+      ctx.fillRect(40, 170, W - 80, 140);
+      ctx.strokeStyle = '#E2E8F0';
+      ctx.strokeRect(40, 170, W - 80, 140);
+
+      ctx.fillStyle = '#64748B';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText('VALOR PROCESSADO', 60, 210);
+
+      const isSats = activeComprovanteTx.currency === 'SATS';
+      ctx.fillStyle = '#0F172A';
+      ctx.font = 'bold 48px sans-serif';
+      ctx.fillText(isSats ? `${activeComprovanteTx.amount} sats ⚡` : `R$ ${formatMoney(activeComprovanteTx.amount)}`, 60, 275);
+
+      let y = 360;
+      ctx.fillStyle = '#334155';
+      ctx.font = 'bold 24px sans-serif';
+      ctx.fillText('DADOS DA OPERAÇÃO', 40, y);
+
+      y += 40; ctx.fillStyle = '#64748B'; ctx.font = '20px sans-serif';
+      ctx.fillText(`Data & Hora: ${activeComprovanteTx.date}`, 40, y);
+      y += 40; ctx.fillText(`Destinatário: ${activeComprovanteTx.name}`, 40, y);
+      y += 40; ctx.fillText(`Chave: ${activeComprovanteTx.key}`, 40, y);
+      y += 40; ctx.fillText(`Instituição: ${activeComprovanteTx.bank || 'ZapPix'}`, 40, y);
+      y += 50; ctx.fillText(`Pagador: ${appState.user.name}`, 40, y);
+      y += 60; ctx.font = '16px monospace';
+      ctx.fillText(`ID Transação: ${activeComprovanteTx.e2eId}`, 40, y);
+      y += 30; ctx.fillText(`Hash Integridade: ${activeComprovanteTx.shaHash}`, 40, y);
+
+      // Marca d'água de autenticidade
+      ctx.save();
+      ctx.translate(W / 2, H / 2);
+      ctx.rotate(-Math.PI / 6);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(0, 168, 89, 0.10)';
+      ctx.font = 'bold 80px sans-serif';
+      ctx.fillText('ZAPPIX OFICIAL', 0, 0);
+      ctx.restore();
+
+      const dataUrl = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = `ZapPix_Comprovante_${activeComprovanteTx.id}.png`;
+      a.click();
+      speakText('Comprovante baixado em imagem.');
     }
 
-    function handleDetectedCode(code) {
-        stopCamera();
-        const clean = code.toLowerCase().replace('lightning:', '').trim();
-
-        if (clean.startsWith('lnbc')) {
-            const parsed = parseBolt11(clean);
-            let sats = parsed.sats;
-            let brl = (sats * (appState.btcBrlRate / 1e8));
-
-            appState.pendingPayment = { type: 'lightning', raw: clean, sats, brl, description: parsed.description };
-
-            document.getElementById('parsed-type').innerText = 'Fatura Bitcoin Lightning';
-            document.getElementById('parsed-amount-sats').innerText = sats ? sats.toLocaleString('pt-BR') + ' sats' : 'Valor aberto';
-            document.getElementById('parsed-amount-brl').innerText = 'R$ ' + brl.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-            
-            const descBox = document.getElementById('parsed-desc-box');
-            if (parsed.description) {
-                document.getElementById('parsed-desc').innerText = parsed.description;
-                descBox.classList.remove('hidden');
-            } else {
-                descBox.classList.add('hidden');
-            }
-
-            document.getElementById('payment-confirm-card').classList.remove('hidden');
-            speakText(`Fatura Lightning identificada no valor de ${sats} satoshis.`);
-            return;
-        }
-
-        if (code.includes('BR.GOV.BCB.PIX') || code.startsWith('000201')) {
-            alert('Código Pix brasileiro identificado!\nPara pagar via Lightning, use faturas Lightning diretamente.');
-            return;
-        }
-
-        alert('Formato de código não reconhecido.');
+    /* ============================================================
+       CONVERSAS & CHAT COM TRANSFERÊNCIA INTEGRADA
+       ============================================================ */
+    function renderChatsList() {
+      const c = document.getElementById('contactsChatList');
+      if (!c) return;
+      const search = (document.getElementById('chatSearchInput')?.value || '').toLowerCase();
+      let contacts = appState.contacts;
+      if (search) contacts = contacts.filter(x => x.name.toLowerCase().includes(search) || x.key.toLowerCase().includes(search));
+      c.innerHTML = contacts.map(ct => {
+        const msgs = appState.chats[ct.id] || [];
+        const last = msgs[msgs.length - 1]?.text || 'Clique para conversar ou mandar Pix';
+        return `
+          <div data-contact-id="${safeId(ct.id)}" role="button" tabindex="0"
+               class="bg-white hover:bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between cursor-pointer shadow-sm touch-active">
+            <div class="flex items-center space-x-3 truncate">
+              <div class="w-11 h-11 rounded-full bg-emerald-100 text-zappix-green flex items-center justify-center font-bold text-xl shadow-sm" aria-hidden="true">
+                ${escapeHtml(ct.avatar || '👤')}
+              </div>
+              <div class="truncate">
+                <h4 class="font-extrabold text-sm text-slate-800 truncate">${escapeHtml(ct.name)}</h4>
+                <p class="text-xs text-slate-500 truncate max-w-[200px]">${escapeHtml(last)}</p>
+              </div>
+            </div>
+            <span class="text-xs font-bold text-zappix-green bg-emerald-50 px-2 py-1 rounded-lg">Conversar</span>
+          </div>`;
+      }).join('');
     }
 
-    // PARSER DE BOLT11 COM EXTRAÇÃO DE DESCRIÇÃO E QUANTIA
-    function parseBolt11(inv) {
-        let sats = 0;
-        let description = '';
-
-        try {
-            const matchAmt = inv.match(/^lnbc(\d+)([munp]?)/);
-            if (matchAmt) {
-                const num = parseInt(matchAmt[1], 10);
-                const mult = matchAmt[2];
-                let btc = 0;
-                if (mult === 'm') btc = num * 0.001;
-                else if (mult === 'u') btc = num * 0.000001;
-                else if (mult === 'n') btc = num * 0.000000001;
-                else if (mult === 'p') btc = num * 0.000000000001;
-                else btc = num;
-                sats = Math.round(btc * 1e8);
-            }
-        } catch(e) {}
-
-        return { sats, description };
+    function openActiveChat(id) {
+      activeChatContactId = id;
+      const c = appState.contacts.find(x => x.id === id);
+      if (!c) return;
+      document.getElementById('chatHeaderName').innerText = c.name;
+      document.getElementById('chatHeaderSubtext').innerText = 'Chave: ' + c.key;
+      document.getElementById('chatHeaderAvatar').innerText = c.avatar || '👤';
+      document.getElementById('chatListSubView').classList.add('hidden');
+      document.getElementById('chatDetailSubView').classList.remove('hidden');
+      renderChatMessages();
     }
 
-    async function executeRealPayment() {
-        if (!appState.pendingPayment) return;
-        const btn = document.getElementById('btn-confirm-pay');
-        btn.disabled = true;
-        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processando Pagamento...`;
-
-        try {
-            const invoice = appState.pendingPayment.raw;
-            const res = await sendNwcRequest('pay_invoice', { invoice });
-
-            confetti({ particleCount: 110, spread: 70 });
-            speakText('Pagamento Lightning efetuado com sucesso!');
-
-            const receipt = {
-                id: res.preimage || 'ln_' + Date.now(),
-                date: new Date().toLocaleString('pt-BR'),
-                amountSats: appState.pendingPayment.sats,
-                amountBrl: appState.pendingPayment.brl,
-                type: `Enviado (-): ${appState.pendingPayment.description || 'Lightning'}`
-            };
-            appState.receipts.unshift(receipt);
-            localStorage.setItem('nostrpix_receipts', JSON.stringify(appState.receipts));
-
-            alert('✅ Pagamento Confirmado!\nPreimage: ' + (res.preimage || 'Sucesso'));
-            cancelPayment();
-            renderReceipts();
-            syncWalletBalance(true);
-        } catch (e) {
-            alert('Falha ao processar pagamento: ' + e.message);
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = `<i class="fa-solid fa-bolt"></i> <span>PAGAR AGORA COM LIGHTNING</span>`;
-        }
+    function closeActiveChat() {
+      document.getElementById('chatDetailSubView').classList.add('hidden');
+      document.getElementById('chatListSubView').classList.remove('hidden');
+      activeChatContactId = null;
     }
 
-    function cancelPayment() {
-        appState.pendingPayment = null;
-        document.getElementById('payment-confirm-card').classList.add('hidden');
-        document.getElementById('invoice-input').value = '';
-    }
-
-    // CÂMERA COM JSQR
-    async function startCamera() {
-        const video = document.getElementById('qr-video');
-        const placeholder = document.getElementById('camera-placeholder');
-        const overlay = document.getElementById('qr-overlay');
-
-        try {
-            videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            video.srcObject = videoStream;
-            video.classList.remove('hidden');
-            placeholder.classList.add('hidden');
-            overlay.classList.remove('hidden');
-            await video.play();
-            scanningActive = true;
-            requestAnimationFrame(scanTick);
-        } catch (e) {
-            alert('Não foi possível acessar a câmera. Cole o código manualmente.');
-        }
-    }
-
-    function scanTick() {
-        if (!scanningActive) return;
-        const video = document.getElementById('qr-video');
-        const canvas = document.getElementById('qr-canvas');
-
-        if (video.readyState === video.HAVE_ENOUGH_DATA) {
-            canvas.height = video.videoHeight;
-            canvas.width = video.videoWidth;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const code = jsQR(imgData.data, imgData.width, imgData.height);
-            if (code && code.data) {
-                handleDetectedCode(code.data);
-                return;
-            }
-        }
-        if (scanningActive) requestAnimationFrame(scanTick);
-    }
-
-    function stopCamera() {
-        scanningActive = false;
-        if (videoStream) {
-            videoStream.getTracks().forEach(t => t.stop());
-            videoStream = null;
-        }
-        document.getElementById('qr-video').classList.add('hidden');
-        document.getElementById('camera-placeholder').classList.remove('hidden');
-        document.getElementById('qr-overlay').classList.add('hidden');
-    }
-
-    // MODAL CONFIG
-    function openConfigModal() {
-        document.getElementById('nwc-uri-input').value = appState.nwcUri;
-        document.getElementById('modal-config').classList.remove('hidden');
-    }
-    function closeConfigModal() {
-        document.getElementById('modal-config').classList.add('hidden');
-    }
-
-    function saveAndConnectNWC() {
-        const uri = document.getElementById('nwc-uri-input').value.trim();
-        if (!uri) { alert('Cole a URI da sua carteira.'); return; }
-
-        if (parseNwcUri(uri)) {
-            appState.nwcUri = uri;
-            localStorage.setItem('nostrpix_nwc_uri', uri);
-            closeConfigModal();
-            syncWalletBalance(false);
-            alert('Carteira conectada com sucesso!');
-        } else {
-            alert('URI Nostr Wallet Connect inválida.');
-        }
-    }
-
-    function disconnectNWC() {
-        appState.nwcUri = '';
-        appState.nwcParams = null;
-        appState.balanceSats = 0;
-        localStorage.removeItem('nostrpix_nwc_uri');
-        setWalletConnectedUI(false);
-        updateBalanceDisplay();
-        closeConfigModal();
-    }
-
-    // HISTÓRICO E RECIBOS
-    function renderReceipts() {
-        const el = document.getElementById('receipts-list');
-        el.innerHTML = '';
-        if (!appState.receipts.length) {
-            el.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhum pagamento realizado ainda.</p>';
-            return;
-        }
-        appState.receipts.forEach(r => {
-            const div = document.createElement('div');
-            div.className = 'bg-gray-950 p-3 rounded-xl border border-gray-800 flex justify-between items-center';
-            div.innerHTML = `
-                <div>
-                    <span class="font-bold text-white block">${r.type || 'Transação'}</span>
-                    <span class="text-[10px] text-gray-500">${r.date}</span>
+    function renderChatMessages() {
+      const c = document.getElementById('chatMessagesContainer');
+      if (!c || !activeChatContactId) return;
+      const msgs = appState.chats[activeChatContactId] || [];
+      if (msgs.length === 0) {
+        c.innerHTML = `<div class="text-center text-xs text-slate-500 py-6">Inicie a conversa com este contato!</div>`;
+        return;
+      }
+      c.innerHTML = msgs.map((m, i) => {
+        const isMe = m.sender === 'me';
+        if (m.isPix) {
+          const isSats = m.currency === 'SATS';
+          return `
+            <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
+              <div class="bg-zappix-yellow text-zappix-darkgreen border-2 border-amber-400 p-3 rounded-2xl max-w-[80%] shadow-md">
+                <div class="flex items-center space-x-2 font-black text-sm">
+                  <i class="fa-solid fa-bolt text-lg" aria-hidden="true"></i>
+                  <span>${isSats ? 'PAGAMENTO LIGHTNING' : 'TRANSFERÊNCIA PIX'}</span>
                 </div>
-                <div class="text-right font-mono">
-                    <span class="font-bold text-emerald-400 block">${r.amountSats} sats</span>
-                    <span class="text-[10px] text-gray-400">R$ ${r.amountBrl ? r.amountBrl.toFixed(2) : '0,00'}</span>
+                <div class="text-xl font-extrabold my-1">${isSats ? `${m.amount} sats` : `R$ ${formatMoney(m.amount)}`}</div>
+                <p class="text-xs font-medium">${escapeHtml(m.text)}</p>
+                <div class="flex justify-between items-center mt-2 pt-2 border-t border-amber-400/50 text-[10px]">
+                  <button data-tx-id="${safeId(m.txId || '')}" class="underline font-bold">Ver Comprovante</button>
+                  <span class="opacity-75">${escapeHtml(m.time)}</span>
                 </div>
-            `;
-            el.appendChild(div);
+              </div>
+            </div>`;
+        }
+        return `
+          <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
+            <div class="${isMe ? 'bg-zappix-bubbleout' : 'bg-zappix-bubblein'} text-slate-800 p-3 rounded-2xl max-w-[80%] shadow-sm space-y-1">
+              <p class="text-xs break-words">${escapeHtml(m.text)}</p>
+              <div class="flex items-center justify-between gap-2 text-[10px] text-slate-400">
+                <button data-speak-idx="${i}" class="hover:text-zappix-green" aria-label="Ouvir mensagem" title="Ouvir">
+                  <i class="fa-solid fa-volume-high" aria-hidden="true"></i>
+                </button>
+                <span>${escapeHtml(m.time)}</span>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+      c.scrollTop = c.scrollHeight;
+    }
+
+    function parsePixCommand(text) {
+      const m = String(text).match(/^pix\s*(?:de\s*|r\$\s*)?(\d+(?:[.,]\d{1,2})?)\s*(?:reais)?$/i);
+      if (!m) return null;
+      const v = parseFloat(m[1].replace(',', '.'));
+      return isFinite(v) && v > 0 ? v : null;
+    }
+
+    function sendChatMessage() {
+      const input = document.getElementById('chatMessageInput');
+      const text = input.value.trim();
+      if (!text || !activeChatContactId) return;
+      const contact = appState.contacts.find(c => c.id === activeChatContactId);
+      if (!contact) return;
+
+      const pixAmt = parsePixCommand(text);
+      if (pixAmt) {
+        currentPixDraft = {
+          recipientName: contact.name,
+          recipientKey: contact.key,
+          recipientBank: contact.bank || 'ZapPix',
+          amount: pixAmt,
+          isLightning: false
+        };
+        document.getElementById('pixStep1').classList.add('hidden');
+        document.getElementById('pixStep3').classList.add('hidden');
+        document.getElementById('pixStep2').classList.remove('hidden');
+        document.getElementById('pixRecipientNameDisplay').innerText = contact.name;
+        document.getElementById('pixRecipientKeyDisplay').innerText = 'Chave: ' + contact.key;
+        document.getElementById('pixAmountInput').value = pixAmt.toFixed(2);
+        document.getElementById('antiScamAlertBox').classList.add('hidden');
+        input.value = '';
+        openModal('pixModal');
+        return;
+      }
+
+      if (!appState.chats[activeChatContactId]) appState.chats[activeChatContactId] = [];
+      appState.chats[activeChatContactId].push({ sender: 'me', text, time: formatTimeHM() });
+      input.value = '';
+      saveState();
+      renderChatMessages();
+    }
+
+    function startChatPixTransfer() {
+      const c = appState.contacts.find(x => x.id === activeChatContactId);
+      if (c) {
+        openPixModal();
+        selectPixContact(c.id);
+      }
+    }
+
+    /* ============================================================
+       MAQUININHA POS BALCÃO
+       ============================================================ */
+    function pressPosKey(k) {
+      if (k === 'C') posCurrentAmountStr = '0';
+      else if (k === '00') { if (posCurrentAmountStr !== '0') posCurrentAmountStr += '00'; }
+      else posCurrentAmountStr = posCurrentAmountStr === '0' ? k : posCurrentAmountStr + k;
+
+      const val = parseFloat(posCurrentAmountStr) / 100;
+      document.getElementById('posAmountDisplay').innerText = formatMoney(val);
+      updateSatsEquivalentDisplays();
+    }
+
+    async function generatePosQrCode(type = 'pix') {
+      const val = parseFloat(posCurrentAmountStr) / 100;
+      if (val <= 0) {
+        showToast('Informe um valor para a maquininha', 'error');
+        return;
+      }
+
+      const desc = (document.getElementById('posDescriptionInput').value || 'Cliente Balcão').trim();
+      const titleEl = document.getElementById('posQrHeaderTitle');
+
+      if (type === 'lightning' && nwcParsed) {
+        const sats = brlToSats(val);
+        showToast(`Gerando fatura Lightning de ${sats} sats...`, 'info');
+        try {
+          const res = await sendNwcRequest('make_invoice', {
+            amount: sats * 1000,
+            description: `ZapPix POS: ${desc}`
+          });
+          posGeneratedPayload = res.invoice;
+          titleEl.innerText = `Mostre ao Cliente (${sats} sats ⚡)`;
+          startPosWatcher(posGeneratedPayload, sats, desc, 'SATS');
+        } catch (e) {
+          showToast('Falha ao gerar invoice Lightning: ' + e.message, 'error');
+          return;
+        }
+      } else {
+        posGeneratedPayload = generateEmvCoPixPayload(appState.user.pixKey, appState.user.name + ' POS', val);
+        titleEl.innerText = `Mostre ao Cliente (R$ ${formatMoney(val)})`;
+      }
+
+      const qr = document.getElementById('posQrCodeElement');
+      if (safeQRCode(qr, { text: posGeneratedPayload, width: 180, height: 180 })) {
+        document.getElementById('posQrCodeText').innerText = posGeneratedPayload;
+        document.getElementById('posQrDisplayContainer').classList.remove('hidden');
+        speakText(`Maquininha pronta! Cobrança de ${formatMoney(val)} reais gerada.`);
+      } else {
+        showToast('QR Code gerado. Copie o código.', 'error');
+      }
+    }
+
+    function startPosWatcher(invoice, satsAmount, desc, currency) {
+      if (posWatcherInterval) clearInterval(posWatcherInterval);
+      const statusEl = document.getElementById('posWatcherStatus');
+      posWatcherInterval = setInterval(async () => {
+        if (!nwcParsed) { clearInterval(posWatcherInterval); return; }
+        try {
+          const res = await sendNwcRequest('lookup_invoice', { invoice });
+          if (res && (res.settled_at || res.paid)) {
+            clearInterval(posWatcherInterval);
+            appState.user.satsBalance = (appState.user.satsBalance || 0) + satsAmount;
+            appState.transactions.unshift({
+              id: 'tx_' + Date.now(),
+              type: 'received',
+              amount: satsAmount,
+              currency,
+              date: formatLocalDateTime(),
+              name: `Venda Maquininha (${desc})`,
+              key: 'Rede Lightning',
+              bank: 'NWC Wallet',
+              e2eId: generateE2EId(),
+              shaHash: generateFakeHash()
+            });
+            saveState();
+            safeConfetti({ particleCount: 120, spread: 80 });
+            speakText(`Pagamento recebido na maquininha! ${satsAmount} satoshis.`);
+            if (statusEl) statusEl.innerHTML = `<i class="fa-solid fa-check"></i> Pago!`;
+          }
+        } catch (e) {}
+      }, 3500);
+    }
+
+    function copyPosQrPayload() {
+      copyToClipboard(posGeneratedPayload);
+      speakText('Código copiado!');
+      showToast('Código copiado', 'success');
+    }
+
+    function simulatePosPaymentReceived() {
+      const val = parseFloat(posCurrentAmountStr) / 100;
+      appState.user.balance += val;
+      const desc = (document.getElementById('posDescriptionInput').value || 'Cliente Balcão').trim();
+      appState.transactions.unshift({
+        id: 'tx_' + Date.now(),
+        type: 'received',
+        amount: val,
+        currency: 'BRL',
+        date: formatLocalDateTime(),
+        name: `Venda Maquininha (${desc})`,
+        key: appState.user.pixKey,
+        bank: 'Pagador Balcão',
+        e2eId: generateE2EId(),
+        shaHash: generateFakeHash()
+      });
+      saveState();
+      safeConfetti({ particleCount: 120, spread: 80, origin: { y: 0.5 } });
+      speakText(`Pix Recebido! R$ ${formatMoney(val)} — ${desc}.`);
+      posCurrentAmountStr = '0';
+      document.getElementById('posAmountDisplay').innerText = '0,00';
+      document.getElementById('posQrDisplayContainer').classList.add('hidden');
+    }
+
+    /* ============================================================
+       CADERNINHO DIGITAL DO FIADO
+       ============================================================ */
+    function renderFiadoList() {
+      const c = document.getElementById('fiadoListContainer');
+      const totalEl = document.getElementById('fiadoTotalDisplay');
+      if (!c) return;
+      let total = 0;
+      appState.fiado.forEach(f => total += Number(f.amount) || 0);
+      if (totalEl) totalEl.innerText = formatMoney(total);
+      if (appState.fiado.length === 0) {
+        c.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhum fiado pendente!</p>`;
+        return;
+      }
+      c.innerHTML = appState.fiado.map(f => `
+        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm space-y-2">
+          <div class="flex justify-between items-start">
+            <div>
+              <h4 class="font-extrabold text-sm text-slate-800">${escapeHtml(f.name)}</h4>
+              <p class="text-[11px] text-slate-400"><i class="fa-solid fa-phone text-[9px]" aria-hidden="true"></i> ${escapeHtml(f.phone)}</p>
+            </div>
+            <span class="font-black text-sm text-purple-900">R$ ${formatMoney(f.amount)}</span>
+          </div>
+          <p class="text-xs text-slate-600 bg-purple-50 p-2 rounded-lg font-medium">${escapeHtml(f.items)}</p>
+          <div class="flex gap-2 text-xs pt-1">
+            <button data-fiado-action="bill" data-fiado-id="${safeId(f.id)}" class="flex-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold py-1.5 rounded-lg flex items-center justify-center gap-1">
+              <i class="fa-brands fa-whatsapp text-emerald-600" aria-hidden="true"></i> Copiar Cobrança
+            </button>
+            <button data-fiado-action="settle" data-fiado-id="${safeId(f.id)}" class="flex-1 bg-purple-700 hover:bg-purple-800 text-white font-bold py-1.5 rounded-lg flex items-center justify-center gap-1">
+              <i class="fa-solid fa-check-circle" aria-hidden="true"></i> Dar Baixa
+            </button>
+          </div>
+        </div>`).join('');
+    }
+
+    function openNewFiadoModal() { openModal('fiadoModal'); }
+
+    function saveFiadoEntry() {
+      const name = document.getElementById('fiadoCustomerName').value.trim();
+      const phone = document.getElementById('fiadoCustomerPhone').value.trim();
+      const amt = parseFloat(document.getElementById('fiadoAmountInput').value);
+      const items = document.getElementById('fiadoItemsInput').value.trim();
+      if (!name || isNaN(amt) || amt <= 0) {
+        showToast('Informe o nome e o valor do fiado', 'error');
+        return;
+      }
+      appState.fiado.push({
+        id: 'f_' + Date.now(),
+        name,
+        phone: phone || '85900000000',
+        amount: amt,
+        items: items || 'Fiado Geral',
+        date: new Date().toLocaleDateString('pt-BR')
+      });
+      saveState();
+      closeModal('fiadoModal');
+      speakText(`Fiado de ${formatMoney(amt)} reais registrado para ${name}.`);
+    }
+
+    function settleFiado(id) {
+      const idx = appState.fiado.findIndex(x => x.id === id);
+      if (idx === -1) return;
+      const item = appState.fiado[idx];
+      appState.user.balance += Number(item.amount) || 0;
+      appState.transactions.unshift({
+        id: 'tx_' + Date.now(),
+        type: 'received',
+        amount: item.amount,
+        currency: 'BRL',
+        date: formatLocalDateTime(),
+        name: `Baixa de Fiado (${item.name})`,
+        key: appState.user.pixKey,
+        bank: 'Quitação Fiado',
+        e2eId: generateE2EId(),
+        shaHash: generateFakeHash()
+      });
+      appState.fiado.splice(idx, 1);
+      saveState();
+      safeConfetti({ particleCount: 90, spread: 60 });
+      speakText(`Baixa efetuada! R$ ${formatMoney(item.amount)} de ${item.name}.`);
+    }
+
+    function sendWhatsAppBilling(id) {
+      const item = appState.fiado.find(x => x.id === id);
+      if (!item) return;
+      const msg = `Olá ${item.name}! Lembrete amigável do Caderninho ZapPix: R$ ${formatMoney(item.amount)} em aberto referente a: ${item.items}. Chave Pix: ${appState.user.pixKey}. Obrigado!`;
+      copyToClipboard(msg);
+      speakText('Mensagem de cobrança copiada.');
+      showToast('Mensagem copiada! Cole no WhatsApp.', 'success');
+    }
+
+    /* ============================================================
+       CONTATOS & PERFIL
+       ============================================================ */
+    function openNewContactModal() { openModal('contactModal'); }
+
+    function saveNewContact() {
+      const name = document.getElementById('newContactName').value.trim();
+      const key = document.getElementById('newContactKey').value.trim();
+      const bank = document.getElementById('newContactBank').value.trim();
+      if (!name || !key) {
+        showToast('Preencha nome e chave', 'error');
+        return;
+      }
+      appState.contacts.push({ id: 'c_' + Date.now(), name, key, bank: bank || 'ZapPix', avatar: '👤' });
+      saveState();
+      closeModal('contactModal');
+      document.getElementById('newContactName').value = '';
+      document.getElementById('newContactKey').value = '';
+      speakText(`Contato ${name} cadastrado.`);
+    }
+
+    function populateProfileInputs() {
+      const u = appState.user;
+      const n = document.getElementById('profileUserName');
+      const k = document.getElementById('profileUserPixKey');
+      const nwc = document.getElementById('nwcConnectionInput');
+      if (n) n.value = u.name;
+      if (k) k.value = u.pixKey;
+      if (nwc) nwc.value = u.nwcUrl || '';
+    }
+
+    function saveUserProfile() {
+      appState.user.name = document.getElementById('profileUserName').value.trim() || appState.user.name;
+      appState.user.pixKey = document.getElementById('profileUserPixKey').value.trim() || appState.user.pixKey;
+      saveState();
+      closeModal('profileModal');
+      speakText('Perfil atualizado.');
+      showToast('Perfil atualizado com sucesso', 'success');
+    }
+
+    async function changePin() {
+      const np = prompt('Digite o novo PIN (4 dígitos numéricos):');
+      if (!np) return;
+      if (!/^\d{4}$/.test(np)) {
+        showToast('O PIN deve conter exatamente 4 dígitos', 'error');
+        return;
+      }
+      const salt = randomSalt();
+      appState.user.pinSalt = salt;
+      appState.user.pinHash = await hashPin(np, salt);
+      appState.user.pinFailedAttempts = 0;
+      appState.user.pinLockedUntil = 0;
+      saveState();
+      showToast('PIN alterado com sucesso', 'success');
+      speakText('Novo PIN configurado.');
+    }
+
+    function exportDataJson() {
+      const json = JSON.stringify(appState, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ZapPix_Backup_${Date.now()}.json`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast('Backup JSON baixado', 'success');
+    }
+
+    function importDataJson(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (!imported || typeof imported !== 'object' || !imported.user) throw new Error('Schema inválido');
+          appState = Object.assign(clone(defaultState), imported);
+          await ensurePinReady();
+          initNwcFromState();
+          saveState();
+          closeModal('profileModal');
+          showToast('Backup importado com sucesso', 'success');
+          speakText('Dados restaurados com sucesso.');
+        } catch (err) {
+          showToast('Arquivo JSON inválido', 'error');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    async function resetAppStateToDefault() {
+      if (!confirm('Tem certeza que deseja restaurar os dados originais? Seu PIN voltará para 1234.')) return;
+      appState = clone(defaultState);
+      await ensurePinReady();
+      initNwcFromState();
+      saveState();
+      closeModal('profileModal');
+      speakText('Dados originais restaurados.');
+      showToast('Dados restaurados', 'success');
+    }
+
+    /* ============================================================
+       LEITOR DE QR CODE VIA CÂMERA & COPIAR
+       ============================================================ */
+    function openScannerModal() {
+      openModal('scannerModal');
+      if (scannerRunning) return;
+      try {
+        if (!html5QrScanner) html5QrScanner = new Html5Qrcode('qrReaderView');
+        html5QrScanner.start(
+          { facingMode: 'environment' },
+          { fps: 10, qrbox: { width: 220, height: 220 } },
+          (d) => handleScannedQrPayload(d),
+          () => {}
+        ).then(() => { scannerRunning = true; })
+         .catch(err => {
+           console.warn('camera', err);
+           showToast('Câmera indisponível. Cole o código.', 'error');
+         });
+      } catch (e) {
+        console.warn('qr init', e);
+      }
+    }
+
+    function closeScannerModal() {
+      closeModal('scannerModal');
+      if (html5QrScanner && scannerRunning) {
+        html5QrScanner.stop().then(() => {
+          scannerRunning = false;
+          try { html5QrScanner.clear(); } catch(e){}
+        }).catch(err => {
+          console.log(err);
+          scannerRunning = false;
         });
+      }
     }
 
-    function clearHistory() {
-        if (!confirm('Deseja limpar o histórico?')) return;
-        appState.receipts = [];
-        localStorage.removeItem('nostrpix_receipts');
-        renderReceipts();
+    function pasteQrFromClipboard() {
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        navigator.clipboard.readText().then(t => {
+          if (t) handleScannedQrPayload(t);
+          else showToast('Área de transferência vazia', 'error');
+        }).catch(() => promptQrPasteFallback());
+      } else {
+        promptQrPasteFallback();
+      }
     }
 
-    // SÍNTESE E RECONHECIMENTO DE VOZ
-    function speakText(txt) {
-        if (!('speechSynthesis' in window)) return;
+    function promptQrPasteFallback() {
+      const c = prompt('Cole o código Pix Copia e Cola ou Invoice Lightning:');
+      if (c) handleScannedQrPayload(c);
+    }
+
+    function handleScannedQrPayload(payload) {
+      closeScannerModal();
+      openPixModal();
+
+      let extracted = null;
+      try {
+        const p = String(payload || '').trim();
+        // Se for BRCode Pix
+        if (p.includes('BR.GOV.BCB.PIX') && p.length > 20) {
+          let i = 0;
+          while (i + 4 <= p.length) {
+            const tag = p.substring(i, i + 2);
+            const len = parseInt(p.substring(i + 2, i + 4), 10);
+            if (!Number.isFinite(len)) break;
+            const val = p.substring(i + 4, i + 4 + len);
+            if (tag === '26') {
+              let j = 0;
+              while (j + 4 <= val.length) {
+                const t = val.substring(j, j + 2);
+                const l = parseInt(val.substring(j + 2, j + 4), 10);
+                if (!Number.isFinite(l)) break;
+                if (t === '01') extracted = val.substring(j + 4, j + 4 + l);
+                j += 4 + l;
+              }
+            }
+            i += 4 + len;
+          }
+        }
+      } catch (e) {}
+
+      document.getElementById('pixKeyInput').value = extracted || payload;
+      speakText('Código escaneado!');
+      goToPixStep2();
+    }
+
+    /* ============================================================
+       RECONHECIMENTO DE VOZ ("APERTE E FALE")
+       ============================================================ */
+    function startVoiceRecognition() {
+      openModal('voiceModal');
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) {
+        document.getElementById('voiceStatusText').innerText = 'Reconhecimento de voz não suportado neste navegador.';
+        return;
+      }
+      const rec = new SR();
+      rec.lang = 'pt-BR';
+      rec.interimResults = false;
+
+      rec.onstart = () => {
+        document.getElementById('voiceStatusText').innerText = 'Escutando seu comando...';
+      };
+      rec.onresult = (e) => {
+        const t = e.results[0][0].transcript.toLowerCase();
+        document.getElementById('voiceStatusText').innerText = `Entendido: "${t}"`;
+        speakText(`Processando comando: ${t}`);
+        setTimeout(() => {
+          closeModal('voiceModal');
+          parseVoiceCommand(t);
+        }, 1000);
+      };
+      rec.onerror = () => {
+        document.getElementById('voiceStatusText').innerText = 'Não entendi. Tente novamente.';
+      };
+      rec.onend = () => {
+        setTimeout(() => {
+          if (!document.getElementById('voiceModal').classList.contains('hidden')) {
+            closeModal('voiceModal');
+          }
+        }, 3000);
+      };
+      rec.start();
+    }
+
+    function parseVoiceCommand(cmd) {
+      const m = cmd.match(/(\d+(?:[.,]\d{1,2})?)\s*(?:reais)?/);
+      const amt = m ? parseFloat(m[1].replace(',', '.')) : null;
+
+      if (cmd.includes('mandar') || cmd.includes('pagar') || cmd.includes('transferir') || cmd.includes('pix')) {
+        openPixModal();
+        if (amt) document.getElementById('pixAmountInput').value = amt.toFixed(2);
+      } else if (cmd.includes('receber') || cmd.includes('depositar')) {
+        openDepositModal();
+      } else if (cmd.includes('maquininha') || cmd.includes('cobrar') || cmd.includes('pos')) {
+        switchView('view-pos');
+      } else if (cmd.includes('extrato')) {
+        switchView('view-extrato');
+      } else if (cmd.includes('fiado') || cmd.includes('caderninho')) {
+        switchView('view-fiado');
+      } else if (cmd.includes('saldo')) {
+        speakText(`Seu saldo em conta é de R$ ${formatMoney(appState.user.balance)} reais.`);
+      }
+    }
+
+    /* ============================================================
+       AVISO & DISCLAIMER
+       ============================================================ */
+    function checkDisclaimer() {
+      if (!localStorage.getItem('zappix_disclaimer_v2')) {
+        const d = document.getElementById('disclaimerOverlay');
+        if (d) {
+          d.classList.remove('hidden');
+          d.classList.add('flex');
+        }
+      }
+    }
+    function acceptDisclaimer() {
+      try { localStorage.setItem('zappix_disclaimer_v2', 'accepted'); } catch (e) {}
+      const d = document.getElementById('disclaimerOverlay');
+      if (d) {
+        d.classList.add('hidden');
+        d.classList.remove('flex');
+      }
+      resetIdleTimer();
+      speakText('Bem-vindo ao ZapPix!');
+    }
+
+    /* ============================================================
+       UTILITÁRIOS GERAIS
+       ============================================================ */
+    function speakText(text) {
+      if (!appState.user.voiceGuide || !('speechSynthesis' in window)) return;
+      try {
         window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(txt);
+        const u = new SpeechSynthesisUtterance(String(text));
         u.lang = 'pt-BR';
+        u.rate = 1.0;
         window.speechSynthesis.speak(u);
+      } catch (e) {}
     }
 
-    function speakBalance() {
-        const brl = (appState.balanceSats * (appState.btcBrlRate / 1e8)).toFixed(2);
-        speakText(`Seu saldo é de ${appState.balanceSats} satoshis, aproximadamente ${brl.replace('.', ',')} reais.`);
+    function formatMoney(v) {
+      return Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    function startVoiceCommand() {
-        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SR) { alert('Reconhecimento de voz não suportado neste navegador.'); return; }
-        const rec = new SR();
-        rec.lang = 'pt-BR';
-        document.getElementById('mic-icon').className = 'fa-solid fa-spinner fa-spin';
-
-        rec.onresult = (e) => {
-            const text = e.results[0][0].transcript.toLowerCase();
-            document.getElementById('voice-status').innerText = `Entendido: "${text}"`;
-            if (text.includes('saldo')) speakBalance();
-            else if (text.includes('pagar')) switchTab('tab-pagar');
-            else if (text.includes('receber')) switchTab('tab-receber');
-        };
-        rec.onend = () => {
-            document.getElementById('mic-icon').className = 'fa-solid fa-microphone';
-        };
-        rec.start();
+    function formatLocalDateTime(d = new Date()) {
+      const p = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
     }
 
-    // NAVEGAÇÃO ENTRE ABAS
-    function switchTab(id) {
-        stopCamera();
-        cancelActiveReceive();
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
-
-        document.querySelectorAll('nav button').forEach(b => {
-            b.classList.remove('text-amber-400', 'bg-gray-800');
-            b.classList.add('text-gray-400');
-        });
-        const activeNav = document.getElementById('nav-' + id.replace('tab-', ''));
-        if (activeNav) {
-            activeNav.classList.remove('text-gray-400');
-            activeNav.classList.add('text-amber-400', 'bg-gray-800');
-        }
+    function formatTimeHM(d = new Date()) {
+      const p = n => String(n).padStart(2, '0');
+      return `${p(d.getHours())}:${p(d.getMinutes())}`;
     }
-    </script>
+
+    function generateE2EId() {
+      const d = new Date(), p = n => String(n).padStart(2, '0');
+      const ts = `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+      return 'E00394460' + ts + String(Math.floor(Math.random() * 1e10)).padStart(10, '0');
+    }
+
+    function generateFakeHash() {
+      const b = new Uint8Array(32);
+      if (window.crypto && window.crypto.getRandomValues) crypto.getRandomValues(b);
+      else for (let i = 0; i < 32; i++) b[i] = Math.floor(Math.random() * 256);
+      return Array.from(b).map(x => x.toString(16).padStart(2, '0')).join('');
+    }
+
+    function escapeHtml(s) {
+      if (s == null) return '';
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function safeId(s) { return String(s || '').replace(/[^a-zA-Z0-9_-]/g, ''); }
+
+    function safeConfetti(o) {
+      try { if (typeof confetti === 'function') confetti(o); } catch (e) {}
+    }
+
+    function safeQRCode(el, opts) {
+      try {
+        if (typeof QRCode === 'undefined') throw new Error('QRCode indisponível');
+        el.innerHTML = '';
+        new QRCode(el, opts);
+        return true;
+      } catch (e) {
+        el.textContent = 'QR Code indisponível offline';
+        return false;
+      }
+    }
+
+    function copyToClipboard(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+
+    function showToast(msg, type = 'info') {
+      const c = document.getElementById('toastContainer');
+      if (!c) return;
+      const bg = type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-emerald-600' : 'bg-slate-800';
+      const t = document.createElement('div');
+      t.className = `${bg} text-white px-4 py-3 rounded-xl shadow-2xl text-sm font-medium max-w-sm pointer-events-auto transition-all`;
+      t.textContent = msg;
+      c.appendChild(t);
+      setTimeout(() => { try { t.remove(); } catch (e) {} }, 4500);
+    }
+  </script>
 </body>
 </html>

@@ -1,12 +1,12 @@
 {
-  "name": "NostrPix - Lightning & Pix",
-  "short_name": "NostrPix",
-  "description": "Carteira Bitcoin Lightning e Pix Acessível via Nostr NWC",
+  "name": "ZapPix - Pague & Converse",
+  "short_name": "ZapPix",
+  "description": "ZapPix & NostrPix: Pagamentos Pix, Maquininha, Fiado e Bitcoin Lightning via Nostr NWC",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0d0f12",
-  "theme_color": "#e6a100",
+  "background_color": "#f1f5f9",
+  "theme_color": "#00A859",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/825/825590.png",
