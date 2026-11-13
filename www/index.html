@@ -68,6 +68,18 @@
             </div>
         </div>
 
+        <!-- ENDEREÇO LIGHTNING (LUD-16) SE DISPONÍVEL -->
+        <div id="lud16-banner" class="hidden bg-purple-950/60 border-t border-purple-800/60 px-4 py-1 text-xs text-purple-200 flex justify-between items-center max-w-md mx-auto font-mono">
+            <div class="flex items-center gap-1.5 truncate">
+                <i class="fa-solid fa-bolt text-amber-400"></i>
+                <span class="text-gray-400">Endereço:</span>
+                <span id="lud16-text" class="font-bold text-amber-300 truncate">--</span>
+            </div>
+            <button onclick="copyLud16()" class="text-purple-300 hover:text-white px-2 py-0.5 rounded bg-purple-900 text-[10px] font-bold">
+                Copiar
+            </button>
+        </div>
+
         <!-- CÂMBIO BITCOIN / REAL AO VIVO -->
         <div class="bg-black/60 px-4 py-1 border-t border-gray-800 text-xs text-gray-300 flex justify-between items-center max-w-md mx-auto font-mono">
             <div class="flex items-center gap-1 text-amber-400 font-bold">
@@ -85,7 +97,7 @@
             </button>
             <div>
                 <p class="font-black text-xs uppercase tracking-wider">Comando por Voz</p>
-                <p class="text-[11px] text-gray-950 font-bold" id="voice-status">Toque e diga: "Saldo" ou "Pagar"</p>
+                <p class="text-[11px] text-gray-950 font-bold" id="voice-status">Toque e diga: "Saldo", "Pagar" ou "Receber"</p>
             </div>
         </div>
         <button onclick="speakBalance()" class="p-2 bg-amber-600 hover:bg-amber-700 text-gray-950 rounded-lg font-black text-sm">
@@ -192,14 +204,19 @@
             <!-- CARD DE CONFIRMAÇÃO DE PAGAMENTO REAL -->
             <div id="payment-confirm-card" class="bg-gray-900 border-2 border-emerald-500 rounded-3xl p-5 shadow-2xl hidden space-y-4">
                 <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-                    <h3 class="text-base font-black text-emerald-400">Confirmar Pagamento Real</h3>
+                    <h3 class="text-base font-black text-emerald-400">Confirmar Pagamento</h3>
                     <button onclick="cancelPayment()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
                 </div>
 
-                <div class="space-y-3 text-xs font-mono">
+                <div class="space-y-2 text-xs font-mono">
                     <div class="bg-gray-950 p-3 rounded-xl border border-gray-800">
-                        <span class="text-gray-500 block uppercase font-bold text-[10px]">Tipo de Fatura</span>
+                        <span class="text-gray-500 block uppercase font-bold text-[10px]">Tipo</span>
                         <span id="parsed-type" class="text-sm font-bold text-amber-400">Bitcoin Lightning</span>
+                    </div>
+
+                    <div id="parsed-desc-box" class="bg-gray-950 p-3 rounded-xl border border-gray-800 hidden">
+                        <span class="text-gray-500 block uppercase font-bold text-[10px]">Descrição / Motivo</span>
+                        <span id="parsed-desc" class="text-xs font-bold text-gray-200 break-words">--</span>
                     </div>
 
                     <div class="bg-gray-950 p-3 rounded-xl border border-gray-800 flex justify-between items-center">
@@ -221,39 +238,83 @@
             </div>
         </section>
 
-        <!-- ABA 3: RECEBER (GERAÇÃO DE PIX BRCODE) -->
+        <!-- ABA 3: RECEBER (DUAL: LIGHTNING NWC MAKE_INVOICE + PIX BRCODE) -->
         <section id="tab-receber" class="tab-content hidden space-y-4">
-            <div class="bg-gray-900 border border-emerald-500/40 rounded-3xl p-5 shadow-xl space-y-3">
-                <h2 class="text-lg font-black text-emerald-400 flex items-center gap-2">
-                    <i class="fa-solid fa-arrow-down-left"></i> Cobrar via Pix
-                </h2>
+            <div class="bg-gray-900 border border-emerald-500/40 rounded-3xl p-5 shadow-xl space-y-4">
+                
+                <!-- SELETOR DE MODO: LIGHTNING OU PIX -->
+                <div class="flex bg-gray-950 p-1.5 rounded-2xl border border-gray-800 text-xs font-bold">
+                    <button onclick="setReceiveMode('lightning')" id="btn-mode-lightning" class="flex-1 py-2.5 rounded-xl bg-amber-500 text-gray-950 shadow flex items-center justify-center gap-1.5 transition">
+                        <i class="fa-solid fa-bolt"></i> Lightning (Bitcoin)
+                    </button>
+                    <button onclick="setReceiveMode('pix')" id="btn-mode-pix" class="flex-1 py-2.5 rounded-xl text-gray-400 hover:text-white flex items-center justify-center gap-1.5 transition">
+                        <i class="fa-solid fa-qrcode"></i> Pix (Reais)
+                    </button>
+                </div>
 
-                <div class="space-y-3 text-xs">
+                <!-- SUBFORMULÁRIO 1: RECEBER VIA LIGHTNING (MAKE_INVOICE NO NÓ REMOTO) -->
+                <div id="receive-lightning-form" class="space-y-3 text-xs">
+                    <div>
+                        <div class="flex justify-between items-center">
+                            <label class="font-bold text-gray-400">Valor em Satoshis:</label>
+                            <span id="receive-sats-to-brl" class="text-[11px] text-amber-400 font-mono font-bold">≈ R$ 0,00</span>
+                        </div>
+                        <input type="number" id="lightning-amount-sats" oninput="updateReceiveSatsPreview()" value="1000" step="100" class="w-full bg-gray-950 border border-gray-700 rounded-xl p-2.5 text-lg font-black text-amber-400 mt-1 focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="font-bold text-gray-400">Descrição / Motivo da Venda:</label>
+                        <input type="text" id="lightning-desc" placeholder="Ex: Café + Pastel" class="w-full bg-gray-950 border border-gray-700 rounded-xl p-2.5 text-sm text-gray-100 mt-1 focus:outline-none focus:border-amber-500">
+                    </div>
+
+                    <button id="btn-generate-lightning" onclick="generateLightningInvoice()" class="accessible-btn w-full bg-amber-500 hover:bg-amber-400 text-gray-950 font-black rounded-2xl shadow transition">
+                        ⚡ GERAR FATURA LIGHTNING
+                    </button>
+                </div>
+
+                <!-- SUBFORMULÁRIO 2: RECEBER VIA PIX (BRCODE) -->
+                <div id="receive-pix-form" class="hidden space-y-3 text-xs">
                     <div>
                         <label class="font-bold text-gray-400">Sua Chave Pix (CPF, Celular, E-mail ou Aleatória):</label>
-                        <input type="text" id="pix-my-key" placeholder="sua-chave@pix.com" class="w-full bg-gray-950 border border-gray-700 rounded-xl p-2.5 text-sm text-gray-100 font-mono mt-1">
+                        <input type="text" id="pix-my-key" placeholder="sua-chave@pix.com" class="w-full bg-gray-950 border border-gray-700 rounded-xl p-2.5 text-sm text-gray-100 font-mono mt-1 focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
                         <label class="font-bold text-gray-400">Nome do Beneficiário:</label>
-                        <input type="text" id="pix-my-name" value="SEU PEDRO" class="w-full bg-gray-950 border border-gray-700 rounded-xl p-2.5 text-sm text-gray-100 mt-1">
+                        <input type="text" id="pix-my-name" value="SEU PEDRO" class="w-full bg-gray-950 border border-gray-700 rounded-xl p-2.5 text-sm text-gray-100 mt-1 focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
                         <label class="font-bold text-gray-400">Valor em Reais (R$):</label>
-                        <input type="number" id="pix-my-amount" value="10.00" step="1.00" class="w-full bg-gray-950 border border-gray-700 rounded-xl p-2.5 text-lg font-black text-amber-400 mt-1">
+                        <input type="number" id="pix-my-amount" value="10.00" step="1.00" class="w-full bg-gray-950 border border-gray-700 rounded-xl p-2.5 text-lg font-black text-emerald-400 mt-1 focus:outline-none focus:border-emerald-500">
                     </div>
 
-                    <button onclick="generatePixBRCode()" class="accessible-btn w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl shadow">
+                    <button onclick="generatePixBRCode()" class="accessible-btn w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl shadow transition">
                         GERAR QR CODE PIX
                     </button>
                 </div>
 
-                <div id="generated-qr-box" class="bg-white p-4 rounded-2xl text-center hidden flex-col items-center justify-center space-y-3">
-                    <div id="qrcode-target"></div>
-                    <p class="text-[10px] text-gray-800 font-mono break-all font-bold" id="pix-payload-text"></p>
-                    <button onclick="copyGeneratedPix()" class="px-4 py-2 bg-gray-900 text-amber-400 font-bold text-xs rounded-xl">
-                        <i class="fa-solid fa-copy"></i> COPIAR CÓDIGO PIX
-                    </button>
+                <!-- CONTAINER DO QR CODE GERADO COM DETECTOR AUTOMÁTICO DE LIQUIDAÇÃO -->
+                <div id="generated-qr-box" class="bg-white p-4 rounded-3xl text-center hidden flex-col items-center justify-center space-y-3 shadow-xl">
+                    <div class="flex items-center justify-between w-full border-b pb-2">
+                        <span id="qr-badge-type" class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                            Fatura Lightning
+                        </span>
+                        <span id="qr-status-indicator" class="text-[11px] font-bold text-emerald-700 flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Aguardando Pagamento...
+                        </span>
+                    </div>
+
+                    <div id="qrcode-target" class="p-2 bg-white rounded-xl"></div>
+                    <p class="text-[10px] text-gray-800 font-mono break-all font-bold max-h-16 overflow-y-auto bg-gray-50 p-2 rounded w-full" id="generated-payload-text"></p>
+                    
+                    <div class="flex gap-2 w-full">
+                        <button onclick="copyGeneratedPayload()" class="flex-1 py-2.5 bg-gray-900 text-amber-400 font-bold text-xs rounded-xl shadow">
+                            <i class="fa-solid fa-copy"></i> Copiar Código
+                        </button>
+                        <button onclick="cancelActiveReceive()" class="py-2.5 px-4 bg-gray-200 text-gray-700 font-bold text-xs rounded-xl">
+                            Fechar
+                        </button>
+                    </div>
                 </div>
+
             </div>
         </section>
 
@@ -262,7 +323,7 @@
             <div class="bg-gray-900 border border-blue-500/40 rounded-3xl p-5 shadow-xl space-y-3">
                 <div class="flex justify-between items-center">
                     <h2 class="text-base font-black text-blue-400 flex items-center gap-2">
-                        <i class="fa-solid fa-receipt"></i> Histórico de Pagamentos
+                        <i class="fa-solid fa-receipt"></i> Histórico de Transações
                     </h2>
                     <button onclick="clearHistory()" class="text-[11px] text-red-400 hover:underline">Limpar</button>
                 </div>
@@ -304,7 +365,7 @@
             </div>
 
             <div class="text-xs text-gray-300 space-y-2">
-                <p>Cole o endereço <strong>Nostr Wallet Connect (NWC)</strong> da sua carteira (Alby Hub, Mutiny, Umbrel ou Coinos):</p>
+                <p>Cole a conexão <strong>Nostr Wallet Connect (NWC)</strong> da sua carteira (Alby Hub, Mutiny, Umbrel ou Coinos):</p>
                 <textarea id="nwc-uri-input" rows="3" placeholder="nostr+walletconnect://<wallet_pubkey>?relay=wss://...&secret=..." class="w-full bg-gray-950 border border-gray-700 rounded-xl p-2.5 text-xs font-mono text-gray-200 focus:outline-none focus:border-amber-500"></textarea>
             </div>
 
@@ -321,17 +382,17 @@
 
     <!-- MOTOR JAVASCRIPT REAL -->
     <script>
-    const STORAGE_KEY = 'nostrpix_live_v1';
     let appState = {
         nwcUri: localStorage.getItem('nostrpix_nwc_uri') || '',
         nwcParams: null,
         balanceSats: 0,
         btcBrlRate: 550000.00,
         receipts: JSON.parse(localStorage.getItem('nostrpix_receipts') || '[]'),
-        pendingPayment: null
+        pendingPayment: null,
+        activeInvoicePolling: null,
+        activeReceiveMode: 'lightning' // 'lightning' ou 'pix'
     };
 
-    let nwcWebSocket = null;
     let videoStream = null;
     let scanningActive = false;
 
@@ -345,9 +406,18 @@
 
         if (appState.nwcUri) {
             parseNwcUri(appState.nwcUri);
-            syncWalletBalance();
+            syncWalletBalance(true);
         }
         renderReceipts();
+        updateReceiveSatsPreview();
+
+        // RECURSO DO NOSTR_PAY: Auto-sync ao voltar para o app (foreground)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                syncWalletBalance(true);
+                updateBtcPrice();
+            }
+        });
     });
 
     // CÂMBIO BTC/BRL EM TEMPO REAL
@@ -361,6 +431,7 @@
                 const satVal = (100 * (appState.btcBrlRate / 1e8)).toFixed(2);
                 document.getElementById('sats-ratio').innerText = `100 Sats ≈ R$ ${satVal.replace('.', ',')}`;
                 updateBalanceDisplay();
+                updateReceiveSatsPreview();
             }
         } catch (e) {
             console.warn('Erro ao atualizar câmbio BTC', e);
@@ -373,18 +444,19 @@
         document.getElementById('balance-brl').innerText = brlVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    // NIP-47 (NOSTR WALLET CONNECT) CLIENT REAL
+    // NIP-47 (NOSTR WALLET CONNECT) CLIENT
     function parseNwcUri(uri) {
         try {
             const url = new URL(uri.replace('nostr+walletconnect://', 'https://'));
             const walletPubkey = (url.hostname || url.pathname.replace('/', '')).toLowerCase();
             const relay = url.searchParams.get('relay');
             const secret = url.searchParams.get('secret');
+            const lud16 = url.searchParams.get('lud16') || '';
 
             if (!walletPubkey || !relay || !secret) throw new Error('Parâmetros NWC incompletos');
 
-            appState.nwcParams = { walletPubkey, relay, secret };
-            setWalletConnectedUI(true);
+            appState.nwcParams = { walletPubkey, relay, secret, lud16 };
+            setWalletConnectedUI(true, lud16);
             return true;
         } catch (e) {
             appState.nwcParams = null;
@@ -393,22 +465,37 @@
         }
     }
 
-    function setWalletConnectedUI(connected) {
+    function setWalletConnectedUI(connected, lud16 = '') {
         const ind = document.getElementById('nwc-indicator');
         const lbl = document.getElementById('nwc-status-label');
         const badge = document.getElementById('wallet-type-badge');
+        const ludBanner = document.getElementById('lud16-banner');
 
         if (connected) {
             ind.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block';
             lbl.innerText = 'Carteira Conectada';
             badge.className = 'px-2.5 py-0.5 bg-emerald-900/60 text-emerald-300 rounded-full text-[10px] font-bold border border-emerald-500/40';
             badge.innerText = 'LIGHTNING ATIVA';
+
+            if (lud16) {
+                document.getElementById('lud16-text').innerText = lud16;
+                ludBanner.classList.remove('hidden');
+            } else {
+                ludBanner.classList.add('hidden');
+            }
         } else {
             ind.className = 'w-2.5 h-2.5 rounded-full bg-red-500 inline-block animate-pulse';
             lbl.innerText = 'Carteira Desconectada';
             badge.className = 'px-2.5 py-0.5 bg-red-900/60 text-red-300 rounded-full text-[10px] font-bold border border-red-500/40';
             badge.innerText = 'DESCONECTADO';
+            ludBanner.classList.add('hidden');
         }
+    }
+
+    function copyLud16() {
+        if (!appState.nwcParams || !appState.nwcParams.lud16) return;
+        navigator.clipboard.writeText(appState.nwcParams.lud16);
+        alert('Endereço Lightning copiado!');
     }
 
     async function sendNwcRequest(method, params = {}) {
@@ -434,8 +521,8 @@
             const ws = new WebSocket(relay);
             const timeout = setTimeout(() => {
                 ws.close();
-                reject(new Error('Tempo limite de resposta da carteira excedido (30s).'));
-            }, 30000);
+                reject(new Error('Tempo limite de resposta da carteira excedido.'));
+            }, 25000);
 
             ws.onopen = () => {
                 const subId = 'nwc_' + Date.now();
@@ -458,38 +545,266 @@
                         ws.close();
 
                         if (response.error) {
-                            reject(new Error(response.error.message || 'Erro no pagamento NWC'));
+                            reject(new Error(response.error.message || 'Erro NWC'));
                         } else {
                             resolve(response.result);
                         }
                     }
-                } catch (err) {
-                    // ignora ruído do websocket
-                }
+                } catch (err) {}
             };
 
             ws.onerror = (err) => {
                 clearTimeout(timeout);
-                reject(new Error('Falha de conexão com o Relay NWC: ' + relay));
+                reject(new Error('Falha de conexão com Relay NWC.'));
             };
         });
     }
 
-    async function syncWalletBalance() {
+    async function syncWalletBalance(silent = false) {
         if (!appState.nwcParams) return;
         try {
-            document.getElementById('nwc-status-label').innerText = 'Consultando saldo...';
+            if (!silent) document.getElementById('nwc-status-label').innerText = 'Consultando...';
             const res = await sendNwcRequest('get_balance');
             if (res && res.balance != null) {
                 appState.balanceSats = Math.floor(res.balance / 1000);
                 updateBalanceDisplay();
-                setWalletConnectedUI(true);
+                setWalletConnectedUI(true, appState.nwcParams.lud16);
             }
         } catch (e) {
-            console.error(e);
-            alert('Não foi possível sincronizar o saldo: ' + e.message);
-            setWalletConnectedUI(false);
+            if (!silent) alert('Não foi possível sincronizar o saldo: ' + e.message);
         }
+    }
+
+    // GERAÇÃO DE COBRANÇAS (RECEBER)
+    function setReceiveMode(mode) {
+        appState.activeReceiveMode = mode;
+        const btnL = document.getElementById('btn-mode-lightning');
+        const btnP = document.getElementById('btn-mode-pix');
+        const formL = document.getElementById('receive-lightning-form');
+        const formP = document.getElementById('receive-pix-form');
+
+        if (mode === 'lightning') {
+            btnL.className = 'flex-1 py-2.5 rounded-xl bg-amber-500 text-gray-950 shadow flex items-center justify-center gap-1.5 transition';
+            btnP.className = 'flex-1 py-2.5 rounded-xl text-gray-400 hover:text-white flex items-center justify-center gap-1.5 transition';
+            formL.classList.remove('hidden');
+            formP.classList.add('hidden');
+        } else {
+            btnP.className = 'flex-1 py-2.5 rounded-xl bg-emerald-600 text-white shadow flex items-center justify-center gap-1.5 transition';
+            btnL.className = 'flex-1 py-2.5 rounded-xl text-gray-400 hover:text-white flex items-center justify-center gap-1.5 transition';
+            formP.classList.remove('hidden');
+            formL.classList.add('hidden');
+        }
+        cancelActiveReceive();
+    }
+
+    function updateReceiveSatsPreview() {
+        const sats = parseInt(document.getElementById('lightning-amount-sats').value, 10) || 0;
+        const brl = (sats * (appState.btcBrlRate / 1e8)).toFixed(2);
+        document.getElementById('receive-sats-to-brl').innerText = `≈ R$ ${brl.replace('.', ',')}`;
+    }
+
+    // RECURSO DO NOSTR_PAY: MAKE_INVOICE DIRETO NO NÓ REMOTO
+    async function generateLightningInvoice() {
+        if (!appState.nwcParams) {
+            alert('Conecte sua carteira Lightning primeiro nas configurações.');
+            openConfigModal();
+            return;
+        }
+
+        const sats = parseInt(document.getElementById('lightning-amount-sats').value, 10);
+        if (!sats || sats <= 0) {
+            alert('Informe um valor em satoshis válido.');
+            return;
+        }
+
+        const desc = document.getElementById('lightning-desc').value.trim() || 'Venda ZapPix Balcão';
+        const btn = document.getElementById('btn-generate-lightning');
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Gerando Fatura no Nó...`;
+
+        try {
+            const res = await sendNwcRequest('make_invoice', {
+                amount: sats * 1000, // em millisats
+                description: desc
+            });
+
+            if (!res || !res.invoice) throw new Error('O nó não retornou a fatura.');
+
+            renderGeneratedQR(res.invoice, 'Fatura Lightning', sats, desc);
+            speakText(`Fatura Lightning de ${sats} satoshis gerada. Aguardando pagamento.`);
+
+            // Inicia escuta automática de pagamento (lookup_invoice)
+            startInvoiceSettlementWatcher(res.invoice, sats, desc);
+        } catch (e) {
+            alert('Falha ao gerar fatura Lightning: ' + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `⚡ GERAR FATURA LIGHTNING`;
+        }
+    }
+
+    // RECURSO DO NOSTR_PAY: LOOKUP_INVOICE & SENSOR DE PAGAMENTO RECEBIDO
+    function startInvoiceSettlementWatcher(invoice, sats, desc) {
+        if (appState.activeInvoicePolling) clearInterval(appState.activeInvoicePolling);
+
+        appState.activeInvoicePolling = setInterval(async () => {
+            try {
+                const res = await sendNwcRequest('lookup_invoice', { invoice });
+                if (res && (res.settled_at != null || res.preimage != null)) {
+                    clearInterval(appState.activeInvoicePolling);
+                    appState.activeInvoicePolling = null;
+
+                    // Som de sucesso e confete!
+                    confetti({ particleCount: 140, spread: 80 });
+                    speakText(`Pagamento de ${sats} satoshis recebido com sucesso!`);
+
+                    document.getElementById('qr-status-indicator').innerHTML = `
+                        <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+                        <span class="text-emerald-700 font-extrabold">PAGO COM SUCESSO!</span>
+                    `;
+
+                    // Registra no histórico
+                    const receipt = {
+                        id: res.preimage || 'in_' + Date.now(),
+                        date: new Date().toLocaleString('pt-BR'),
+                        amountSats: sats,
+                        amountBrl: (sats * (appState.btcBrlRate / 1e8)),
+                        type: `Recebido (+): ${desc}`
+                    };
+                    appState.receipts.unshift(receipt);
+                    localStorage.setItem('nostrpix_receipts', JSON.stringify(appState.receipts));
+
+                    renderReceipts();
+                    syncWalletBalance(true);
+                }
+            } catch (e) {
+                // continua escutando silenciosamente
+            }
+        }, 3500);
+    }
+
+    function cancelActiveReceive() {
+        if (appState.activeInvoicePolling) {
+            clearInterval(appState.activeInvoicePolling);
+            appState.activeInvoicePolling = null;
+        }
+        document.getElementById('generated-qr-box').classList.add('hidden');
+    }
+
+    function renderGeneratedQR(payload, badgeLabel, sats = 0, desc = '') {
+        document.getElementById('qr-badge-type').innerText = badgeLabel;
+        document.getElementById('generated-payload-text').innerText = payload;
+        document.getElementById('qr-status-indicator').innerHTML = `
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Aguardando Pagamento...
+        `;
+
+        const target = document.getElementById('qrcode-target');
+        target.innerHTML = '';
+        new QRCode(target, { text: payload, width: 190, height: 190 });
+
+        document.getElementById('generated-qr-box').classList.remove('hidden');
+    }
+
+    function copyGeneratedPayload() {
+        navigator.clipboard.writeText(document.getElementById('generated-payload-text').innerText);
+        alert('Código copiado com sucesso!');
+    }
+
+    // PIX BRCODE
+    function generatePixBRCode() {
+        const key = document.getElementById('pix-my-key').value.trim();
+        const name = document.getElementById('pix-my-name').value.trim() || 'SEU PEDRO';
+        const amt = parseFloat(document.getElementById('pix-my-amount').value) || 0;
+
+        if (!key) { alert('Informe sua chave Pix.'); return; }
+
+        const amtStr = amt > 0 ? amt.toFixed(2) : '';
+        const cleanName = name.substring(0, 25).normalize('NFD').replace(/[\u0300-\u06ff]/g, '');
+        const cleanKey = key.trim();
+
+        let payload = `00020126${String(cleanKey.length + 22).padStart(2,'0')}0014BR.GOV.BCB.PIX01${String(cleanKey.length).padStart(2,'0')}${cleanKey}520400005303986`;
+        if (amtStr) payload += `54${String(amtStr.length).padStart(2,'0')}${amtStr}`;
+        payload += `5802BR59${String(cleanName.length).padStart(2,'0')}${cleanName}6009FORTALEZA62070503***6304`;
+
+        let crc = 0xFFFF;
+        const bytes = new TextEncoder().encode(payload);
+        for (let i = 0; i < bytes.length; i++) {
+            crc ^= bytes[i] << 8;
+            for (let j = 0; j < 8; j++) {
+                crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+                crc &= 0xFFFF;
+            }
+        }
+        const finalCode = payload + crc.toString(16).toUpperCase().padStart(4, '0');
+
+        renderGeneratedQR(finalCode, 'Código Pix BRCode');
+        speakText(`Código Pix de ${amt} reais gerado.`);
+    }
+
+    // PAGAMENTO E PROCESSAMENTO DE FATURA (COM LEITURA DE DESCRIÇÃO BOLT11)
+    function processInputCode() {
+        const text = document.getElementById('invoice-input').value.trim();
+        if (!text) { alert('Insira um código válido.'); return; }
+        handleDetectedCode(text);
+    }
+
+    function handleDetectedCode(code) {
+        stopCamera();
+        const clean = code.toLowerCase().replace('lightning:', '').trim();
+
+        if (clean.startsWith('lnbc')) {
+            const parsed = parseBolt11(clean);
+            let sats = parsed.sats;
+            let brl = (sats * (appState.btcBrlRate / 1e8));
+
+            appState.pendingPayment = { type: 'lightning', raw: clean, sats, brl, description: parsed.description };
+
+            document.getElementById('parsed-type').innerText = 'Fatura Bitcoin Lightning';
+            document.getElementById('parsed-amount-sats').innerText = sats ? sats.toLocaleString('pt-BR') + ' sats' : 'Valor aberto';
+            document.getElementById('parsed-amount-brl').innerText = 'R$ ' + brl.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            
+            const descBox = document.getElementById('parsed-desc-box');
+            if (parsed.description) {
+                document.getElementById('parsed-desc').innerText = parsed.description;
+                descBox.classList.remove('hidden');
+            } else {
+                descBox.classList.add('hidden');
+            }
+
+            document.getElementById('payment-confirm-card').classList.remove('hidden');
+            speakText(`Fatura Lightning identificada no valor de ${sats} satoshis.`);
+            return;
+        }
+
+        if (code.includes('BR.GOV.BCB.PIX') || code.startsWith('000201')) {
+            alert('Código Pix brasileiro identificado!\nPara pagar via Lightning, use faturas Lightning diretamente.');
+            return;
+        }
+
+        alert('Formato de código não reconhecido.');
+    }
+
+    // PARSER DE BOLT11 COM EXTRAÇÃO DE DESCRIÇÃO E QUANTIA
+    function parseBolt11(inv) {
+        let sats = 0;
+        let description = '';
+
+        try {
+            const matchAmt = inv.match(/^lnbc(\d+)([munp]?)/);
+            if (matchAmt) {
+                const num = parseInt(matchAmt[1], 10);
+                const mult = matchAmt[2];
+                let btc = 0;
+                if (mult === 'm') btc = num * 0.001;
+                else if (mult === 'u') btc = num * 0.000001;
+                else if (mult === 'n') btc = num * 0.000000001;
+                else if (mult === 'p') btc = num * 0.000000000001;
+                else btc = num;
+                sats = Math.round(btc * 1e8);
+            }
+        } catch(e) {}
+
+        return { sats, description };
     }
 
     async function executeRealPayment() {
@@ -502,7 +817,7 @@
             const invoice = appState.pendingPayment.raw;
             const res = await sendNwcRequest('pay_invoice', { invoice });
 
-            confetti({ particleCount: 100, spread: 70 });
+            confetti({ particleCount: 110, spread: 70 });
             speakText('Pagamento Lightning efetuado com sucesso!');
 
             const receipt = {
@@ -510,7 +825,7 @@
                 date: new Date().toLocaleString('pt-BR'),
                 amountSats: appState.pendingPayment.sats,
                 amountBrl: appState.pendingPayment.brl,
-                type: 'Lightning'
+                type: `Enviado (-): ${appState.pendingPayment.description || 'Lightning'}`
             };
             appState.receipts.unshift(receipt);
             localStorage.setItem('nostrpix_receipts', JSON.stringify(appState.receipts));
@@ -518,64 +833,12 @@
             alert('✅ Pagamento Confirmado!\nPreimage: ' + (res.preimage || 'Sucesso'));
             cancelPayment();
             renderReceipts();
-            syncWalletBalance();
+            syncWalletBalance(true);
         } catch (e) {
             alert('Falha ao processar pagamento: ' + e.message);
         } finally {
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-bolt"></i> <span>PAGAR AGORA COM LIGHTNING</span>`;
-        }
-    }
-
-    // PROCESSAMENTO DE FATURA (LIGHTNING OU PIX)
-    function processInputCode() {
-        const text = document.getElementById('invoice-input').value.trim();
-        if (!text) { alert('Insira um código válido.'); return; }
-        handleDetectedCode(text);
-    }
-
-    function handleDetectedCode(code) {
-        stopCamera();
-        const clean = code.toLowerCase().replace('lightning:', '').trim();
-
-        if (clean.startsWith('lnbc')) {
-            let sats = parseBolt11AmountSats(clean);
-            let brl = (sats * (appState.btcBrlRate / 1e8));
-
-            appState.pendingPayment = { type: 'lightning', raw: clean, sats, brl };
-
-            document.getElementById('parsed-type').innerText = 'Fatura Bitcoin Lightning';
-            document.getElementById('parsed-amount-sats').innerText = sats ? sats.toLocaleString('pt-BR') + ' sats' : 'Valor aberto';
-            document.getElementById('parsed-amount-brl').innerText = 'R$ ' + brl.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-            document.getElementById('payment-confirm-card').classList.remove('hidden');
-
-            speakText(`Fatura Lightning identificada no valor de ${sats} satoshis.`);
-            return;
-        }
-
-        if (code.includes('BR.GOV.BCB.PIX') || code.startsWith('000201')) {
-            alert('Código Pix brasileiro identificado!\nPara pagar com Lightning, pague faturas Lightning diretamente.');
-            return;
-        }
-
-        alert('Formato de código não reconhecido.');
-    }
-
-    function parseBolt11AmountSats(inv) {
-        try {
-            const match = inv.match(/^lnbc(\d+)([munp]?)/);
-            if (!match) return 0;
-            const num = parseInt(match[1], 10);
-            const mult = match[2];
-            let btc = 0;
-            if (mult === 'm') btc = num * 0.001;
-            else if (mult === 'u') btc = num * 0.000001;
-            else if (mult === 'n') btc = num * 0.000000001;
-            else if (mult === 'p') btc = num * 0.000000000001;
-            else btc = num;
-            return Math.round(btc * 1e8);
-        } catch (e) {
-            return 0;
         }
     }
 
@@ -585,7 +848,7 @@
         document.getElementById('invoice-input').value = '';
     }
 
-    // CÂMERA
+    // CÂMERA COM JSQR
     async function startCamera() {
         const video = document.getElementById('qr-video');
         const placeholder = document.getElementById('camera-placeholder');
@@ -636,7 +899,7 @@
         document.getElementById('qr-overlay').classList.add('hidden');
     }
 
-    // CONFIG MODAL
+    // MODAL CONFIG
     function openConfigModal() {
         document.getElementById('nwc-uri-input').value = appState.nwcUri;
         document.getElementById('modal-config').classList.remove('hidden');
@@ -653,7 +916,7 @@
             appState.nwcUri = uri;
             localStorage.setItem('nostrpix_nwc_uri', uri);
             closeConfigModal();
-            syncWalletBalance();
+            syncWalletBalance(false);
             alert('Carteira conectada com sucesso!');
         } else {
             alert('URI Nostr Wallet Connect inválida.');
@@ -670,46 +933,7 @@
         closeConfigModal();
     }
 
-    // PIX BRCODE
-    function generatePixBRCode() {
-        const key = document.getElementById('pix-my-key').value.trim();
-        const name = document.getElementById('pix-my-name').value.trim() || 'RECEBEDOR';
-        const amt = parseFloat(document.getElementById('pix-my-amount').value) || 0;
-
-        if (!key) { alert('Informe sua chave Pix.'); return; }
-
-        const amtStr = amt > 0 ? amt.toFixed(2) : '';
-        const cleanName = name.substring(0, 25).normalize('NFD').replace(/[\u0300-\u06ff]/g, '');
-        const cleanKey = key.trim();
-
-        let payload = `00020126${String(cleanKey.length + 22).padStart(2,'0')}0014BR.GOV.BCB.PIX01${String(cleanKey.length).padStart(2,'0')}${cleanKey}520400005303986`;
-        if (amtStr) payload += `54${String(amtStr.length).padStart(2,'0')}${amtStr}`;
-        payload += `5802BR59${String(cleanName.length).padStart(2,'0')}${cleanName}6009FORTALEZA62070503***6304`;
-
-        let crc = 0xFFFF;
-        const bytes = new TextEncoder().encode(payload);
-        for (let i = 0; i < bytes.length; i++) {
-            crc ^= bytes[i] << 8;
-            for (let j = 0; j < 8; j++) {
-                crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
-                crc &= 0xFFFF;
-            }
-        }
-        const finalCode = payload + crc.toString(16).toUpperCase().padStart(4, '0');
-
-        document.getElementById('pix-payload-text').innerText = finalCode;
-        const box = document.getElementById('qrcode-target');
-        box.innerHTML = '';
-        new QRCode(box, { text: finalCode, width: 180, height: 180 });
-        document.getElementById('generated-qr-box').classList.remove('hidden');
-    }
-
-    function copyGeneratedPix() {
-        navigator.clipboard.writeText(document.getElementById('pix-payload-text').innerText);
-        alert('Código Pix copiado!');
-    }
-
-    // RECIBOS
+    // HISTÓRICO E RECIBOS
     function renderReceipts() {
         const el = document.getElementById('receipts-list');
         el.innerHTML = '';
@@ -722,7 +946,7 @@
             div.className = 'bg-gray-950 p-3 rounded-xl border border-gray-800 flex justify-between items-center';
             div.innerHTML = `
                 <div>
-                    <span class="font-bold text-white block">${r.type || 'Pagamento'}</span>
+                    <span class="font-bold text-white block">${r.type || 'Transação'}</span>
                     <span class="text-[10px] text-gray-500">${r.date}</span>
                 </div>
                 <div class="text-right font-mono">
@@ -735,13 +959,13 @@
     }
 
     function clearHistory() {
-        if (!confirm('Deseja limpar os recibos?')) return;
+        if (!confirm('Deseja limpar o histórico?')) return;
         appState.receipts = [];
         localStorage.removeItem('nostrpix_receipts');
         renderReceipts();
     }
 
-    // VOZ
+    // SÍNTESE E RECONHECIMENTO DE VOZ
     function speakText(txt) {
         if (!('speechSynthesis' in window)) return;
         window.speechSynthesis.cancel();
@@ -775,9 +999,10 @@
         rec.start();
     }
 
-    // NAVEGAÇÃO
+    // NAVEGAÇÃO ENTRE ABAS
     function switchTab(id) {
         stopCamera();
+        cancelActiveReceive();
         document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
         document.getElementById(id).classList.remove('hidden');
 
