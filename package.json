@@ -1,0 +1,23 @@
+{
+  "name": "nostrpix",
+  "version": "1.0.0",
+  "description": "NostrPix - Carteira Bitcoin Lightning & Pix Acessível",
+  "main": "www/index.html",
+  "scripts": {
+    "build": "echo 'Web assets ready in www'"
+  },
+  "keywords": [
+    "nostr",
+    "lightning",
+    "bitcoin",
+    "pix",
+    "nwc"
+  ],
+  "author": "Thercio",
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/cli": "^6.1.2",
+    "@capacitor/core": "^6.1.2"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "appId": "com.nostrpix.app",
+  "appName": "NostrPix",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

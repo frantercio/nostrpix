@@ -1,0 +1,81 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Build NostrPix APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: |
+          npm install
+
+      - name: Initialize Capacitor Android Project
+        run: |
+          npx cap add android
+          npx cap sync android
+
+      - name: Grant Android Permissions (Camera, Audio & Internet)
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST" ]; then
+            sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\n    <uses-feature android:name="android.hardware.camera" android:required="false" />\n    <uses-feature android:name="android.hardware.microphone" android:required="false" />' "$MANIFEST"
+          fi
+
+      - name: Build Debug APK with Gradle
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
+          cd ..
+          cp android/app/build/outputs/apk/debug/app-debug.apk NostrPix.apk
+
+      - name: Upload APK as Workflow Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NostrPix-Android-APK
+          path: NostrPix.apk
+          retention-days: 30
+
+      - name: Create GitHub Release with APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: NostrPix v1.0.${{ github.run_number }}
+          body: |
+            ## ⚡ NostrPix - APK Android Disponível!
+            
+            Aplicativo compilado automaticamente com sucesso via **GitHub Actions**.
+            
+            ### 📥 Download Direto:
+            Baixe o arquivo **`NostrPix.apk`** em **Assets** abaixo e instale no seu celular Android.
+            
+            ---
+            - **Versão:** 1.0.${{ github.run_number }}
+            - **Compatibilidade:** Android 7.0+
+            - **Recursos:** Bitcoin Lightning (NWC) + Pix BRCode + Leitor de Câmera + Comando por Voz
+          files: NostrPix.apk
+          token: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true

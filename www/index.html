@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#e6a100">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>NostrPix — Carteira Lightning & Pix Acessível</title>
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/825/825590.png">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+
+    <!-- QR Code Generator & Scanner -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
+    <!-- nostr-tools v2.7.0 (NIP-47, NIP-04, NIP-19) -->
+    <script src="https://cdn.jsdelivr.net/npm/nostr-tools@2.7.0/lib/nostr.bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50:'#fffbe6', 400:'#fadb14', 500:'#e6a100', 600:'#d48800' },
+                        pix: '#32bcad',
+                        nostr: '#8e44ad'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background-color: #0d0f12; color: #f3f4f6; touch-action: manipulation; }
+        .accessible-btn { min-height: 3.5rem; font-size: 1.15rem; font-weight: 800; }
+        button { user-select: none; -webkit-user-select: none; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 9999px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- HEADER PRINCIPAL -->
+    <header class="bg-gray-900 border-b-2 border-amber-500 sticky top-0 z-40 shadow-xl">
+        <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center text-gray-950 font-black text-xl shadow">⚡</div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-wide text-amber-400">NostrPix</h1>
+                    <p class="text-xs text-gray-400 font-bold flex items-center gap-1.5">
+                        <span id="nwc-indicator" class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block animate-pulse"></span>
+                        <span id="nwc-status-label">Carteira Desconectada</span>
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="openConfigModal()" aria-label="Conectar Carteira" class="p-3 bg-gray-800 hover:bg-gray-700 text-amber-400 rounded-xl border border-amber-500/40">
+                    <i class="fa-solid fa-wallet text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- CÂMBIO BITCOIN / REAL AO VIVO -->
+        <div class="bg-black/60 px-4 py-1 border-t border-gray-800 text-xs text-gray-300 flex justify-between items-center max-w-md mx-auto font-mono">
+            <div class="flex items-center gap-1 text-amber-400 font-bold">
+                <i class="fa-solid fa-chart-line"></i> 1 BTC = R$ <span id="btc-brl-rate">Carregando...</span>
+            </div>
+            <div class="text-emerald-400 font-semibold" id="sats-ratio">100 Sats ≈ R$ --</div>
+        </div>
+    </header>
+
+    <!-- BANNER DE ACESSIBILIDADE E VOZ -->
+    <div class="bg-amber-500 text-gray-950 px-4 py-2.5 shadow-md max-w-md mx-auto w-full flex items-center justify-between border-b border-amber-600">
+        <div class="flex items-center space-x-3">
+            <button onclick="startVoiceCommand()" class="w-11 h-11 rounded-full bg-gray-950 text-amber-400 flex items-center justify-center text-lg shadow-lg active:scale-95 transition">
+                <i class="fa-solid fa-microphone" id="mic-icon"></i>
+            </button>
+            <div>
+                <p class="font-black text-xs uppercase tracking-wider">Comando por Voz</p>
+                <p class="text-[11px] text-gray-950 font-bold" id="voice-status">Toque e diga: "Saldo" ou "Pagar"</p>
+            </div>
+        </div>
+        <button onclick="speakBalance()" class="p-2 bg-amber-600 hover:bg-amber-700 text-gray-950 rounded-lg font-black text-sm">
+            <i class="fa-solid fa-volume-high"></i>
+        </button>
+    </div>
+
+    <!-- CORPO PRINCIPAL -->
+    <main class="max-w-md mx-auto w-full flex-grow p-4 pb-28 space-y-4">
+
+        <!-- ABA 1: INÍCIO / SALDO REAL -->
+        <section id="tab-inicio" class="tab-content space-y-4">
+            <div class="bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 border-2 border-amber-500/50 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-xs uppercase font-extrabold text-amber-400 tracking-wider">Saldo Disponível</span>
+                    <span id="wallet-type-badge" class="px-2.5 py-0.5 bg-red-900/60 text-red-300 rounded-full text-[10px] font-bold border border-red-500/40">DESCONECTADO</span>
+                </div>
+                
+                <div class="my-3">
+                    <div class="text-4xl font-black text-white tracking-tight flex items-baseline gap-2">
+                        <span class="text-amber-400 text-2xl">R$</span>
+                        <span id="balance-brl">0,00</span>
+                    </div>
+                    <div class="text-base font-extrabold text-amber-400/90 mt-1 font-mono flex items-center gap-1.5">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span id="balance-sats">0</span> satoshis
+                    </div>
+                </div>
+
+                <div class="mt-6 grid grid-cols-2 gap-3">
+                    <button onclick="switchTab('tab-pagar')" class="accessible-btn bg-amber-500 hover:bg-amber-400 text-gray-950 rounded-2xl p-3 flex items-center justify-center space-x-2 shadow-lg active:scale-95 transition">
+                        <i class="fa-solid fa-qrcode text-xl"></i>
+                        <span>PAGAR</span>
+                    </button>
+                    <button onclick="switchTab('tab-receber')" class="accessible-btn bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl p-3 flex items-center justify-center space-x-2 shadow-lg active:scale-95 transition">
+                        <i class="fa-solid fa-arrow-down-left text-xl"></i>
+                        <span>RECEBER</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3">
+                <button onclick="syncWalletBalance()" class="accessible-btn bg-gray-900 hover:bg-gray-800 border border-gray-800 text-amber-400 rounded-2xl p-4 flex items-center justify-between shadow">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-amber-500/20 rounded-xl flex items-center justify-center text-amber-400 text-lg">
+                            <i class="fa-solid fa-rotate"></i>
+                        </div>
+                        <div class="text-left">
+                            <div class="font-extrabold text-base text-white">ATUALIZAR SALDO</div>
+                            <div class="text-xs text-gray-400">Consultar carteira via Nostr NWC</div>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-gray-500"></i>
+                </button>
+
+                <button onclick="openConfigModal()" class="accessible-btn bg-gray-900 hover:bg-gray-800 border border-gray-800 text-purple-400 rounded-2xl p-4 flex items-center justify-between shadow">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center text-purple-400 text-lg">
+                            <i class="fa-solid fa-link"></i>
+                        </div>
+                        <div class="text-left">
+                            <div class="font-extrabold text-base text-white">CONECTAR CARTEIRA</div>
+                            <div class="text-xs text-gray-400">Alby, Mutiny, Coinos ou Umbrel</div>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-gray-500"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- ABA 2: PAGAR (LIGHTNING BOLT11 / PIX) -->
+        <section id="tab-pagar" class="tab-content hidden space-y-4">
+            <div class="bg-gray-900 border border-amber-500/40 rounded-3xl p-5 shadow-xl space-y-4">
+                <h2 class="text-lg font-black text-amber-400 flex items-center gap-2">
+                    <i class="fa-solid fa-qrcode"></i> Pagar Lightning ou Pix
+                </h2>
+
+                <!-- SCANNER DE CÂMERA -->
+                <div class="relative bg-black rounded-2xl overflow-hidden aspect-square border-2 border-gray-700 flex items-center justify-center">
+                    <video id="qr-video" class="w-full h-full object-cover hidden" playsinline muted></video>
+                    <canvas id="qr-canvas" class="hidden"></canvas>
+                    <div id="camera-placeholder" class="text-center p-6 space-y-3">
+                        <i class="fa-solid fa-camera text-4xl text-amber-500"></i>
+                        <p class="text-xs text-gray-300 font-bold">Aponte para uma fatura Lightning ou QR Pix</p>
+                        <button onclick="startCamera()" class="px-5 py-2.5 bg-amber-500 text-gray-950 font-black rounded-xl text-sm shadow">
+                            ABRIR CÂMERA
+                        </button>
+                    </div>
+                    <div id="qr-overlay" class="absolute inset-0 border-4 border-amber-400/50 rounded-2xl pointer-events-none hidden flex items-center justify-center">
+                        <div class="w-48 h-48 border-2 border-dashed border-amber-300 rounded-lg"></div>
+                    </div>
+                </div>
+
+                <!-- CAMPO MANUAL DE INVOICE -->
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-gray-400">Ou cole a Fatura Lightning (lnbc...) ou Código Pix:</label>
+                    <textarea id="invoice-input" rows="2" placeholder="lnbc... ou 000201..." class="w-full bg-gray-950 border border-gray-700 rounded-xl p-3 text-xs font-mono text-gray-200 focus:outline-none focus:border-amber-500"></textarea>
+                    <button onclick="processInputCode()" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-gray-950 font-black rounded-xl text-sm shadow">
+                        VALIDAR CÓDIGO
+                    </button>
+                </div>
+            </div>
+
+            <!-- CARD DE CONFIRMAÇÃO DE PAGAMENTO REAL -->
+            <div id="payment-confirm-card" class="bg-gray-900 border-2 border-emerald-500 rounded-3xl p-5 shadow-2xl hidden space-y-4">
+                <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                    <h3 class="text-base font-black text-emerald-400">Confirmar Pagamento Real</h3>
+                    <button onclick="cancelPayment()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+
+                <div class="space-y-3 text-xs font-mono">
+                    <div class="bg-gray-950 p-3 rounded-xl border border-gray-800">
+                        <span class="text-gray-500 block uppercase font-bold text-[10px]">Tipo de Fatura</span>
+                        <span id="parsed-type" class="text-sm font-bold text-amber-400">Bitcoin Lightning</span>
+                    </div>
+
+                    <div class="bg-gray-950 p-3 rounded-xl border border-gray-800 flex justify-between items-center">
+                        <div>
+                            <span class="text-gray-500 block uppercase font-bold text-[10px]">Valor em Reais (Aprox.)</span>
+                            <span id="parsed-amount-brl" class="text-xl font-black text-white">R$ 0,00</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-gray-500 block uppercase font-bold text-[10px]">Valor Real em Sats</span>
+                            <span id="parsed-amount-sats" class="text-lg font-bold text-emerald-400">0 sats</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="btn-confirm-pay" onclick="executeRealPayment()" class="accessible-btn w-full bg-emerald-500 hover:bg-emerald-400 text-gray-950 rounded-2xl font-black text-lg shadow-lg flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>PAGAR AGORA COM LIGHTNING</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ABA 3: RECEBER (GERAÇÃO DE PIX BRCODE) -->
+        <section id="tab-receber" class="tab-content hidden space-y-4">
+            <div class="bg-gray-900 border border-emerald-500/40 rounded-3xl p-5 shadow-xl space-y-3">
+                <h2 class="text-lg font-black text-emerald-400 flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-down-left"></i> Cobrar via Pix
+                </h2>
+
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <label class="font-bold text-gray-400">Sua Chave Pix (CPF, Celular, E-mail ou Aleatória):</label>
+                        <input type="text" id="pix-my-key" placeholder="sua-chave@pix.com" class="w-full bg-gray-950 border border-gray-700 rounded-xl p-2.5 text-sm text-gray-100 font-mono mt-1">
+                    </div>
+                    <div>
+                        <label class="font-bold text-gray-400">Nome do Beneficiário:</label>
+                        <input type="text" id="pix-my-name" value="SEU PEDRO" class="w-full bg-gray-950 border border-gray-700 rounded-xl p-2.5 text-sm text-gray-100 mt-1">
+                    </div>
+                    <div>
+                        <label class="font-bold text-gray-400">Valor em Reais (R$):</label>
+                        <input type="number" id="pix-my-amount" value="10.00" step="1.00" class="w-full bg-gray-950 border border-gray-700 rounded-xl p-2.5 text-lg font-black text-amber-400 mt-1">
+                    </div>
+
+                    <button onclick="generatePixBRCode()" class="accessible-btn w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl shadow">
+                        GERAR QR CODE PIX
+                    </button>
+                </div>
+
+                <div id="generated-qr-box" class="bg-white p-4 rounded-2xl text-center hidden flex-col items-center justify-center space-y-3">
+                    <div id="qrcode-target"></div>
+                    <p class="text-[10px] text-gray-800 font-mono break-all font-bold" id="pix-payload-text"></p>
+                    <button onclick="copyGeneratedPix()" class="px-4 py-2 bg-gray-900 text-amber-400 font-bold text-xs rounded-xl">
+                        <i class="fa-solid fa-copy"></i> COPIAR CÓDIGO PIX
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 4: HISTÓRICO REAL -->
+        <section id="tab-recibos" class="tab-content hidden space-y-4">
+            <div class="bg-gray-900 border border-blue-500/40 rounded-3xl p-5 shadow-xl space-y-3">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-base font-black text-blue-400 flex items-center gap-2">
+                        <i class="fa-solid fa-receipt"></i> Histórico de Pagamentos
+                    </h2>
+                    <button onclick="clearHistory()" class="text-[11px] text-red-400 hover:underline">Limpar</button>
+                </div>
+                <div id="receipts-list" class="space-y-2 text-xs"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- NAVEGAÇÃO INFERIOR -->
+    <nav class="bg-gray-900 border-t border-gray-800 fixed bottom-0 left-0 right-0 z-40">
+        <div class="max-w-md mx-auto grid grid-cols-4 gap-1 p-2">
+            <button onclick="switchTab('tab-inicio')" id="nav-inicio" class="text-amber-400 flex flex-col items-center py-1.5 rounded-xl bg-gray-800">
+                <i class="fa-solid fa-house text-lg mb-0.5"></i>
+                <span class="text-[10px] font-bold">Início</span>
+            </button>
+            <button onclick="switchTab('tab-pagar')" id="nav-pagar" class="text-gray-400 flex flex-col items-center py-1.5 rounded-xl">
+                <i class="fa-solid fa-qrcode text-lg mb-0.5"></i>
+                <span class="text-[10px] font-bold">Pagar</span>
+            </button>
+            <button onclick="switchTab('tab-receber')" id="nav-receber" class="text-gray-400 flex flex-col items-center py-1.5 rounded-xl">
+                <i class="fa-solid fa-arrow-down-left text-lg mb-0.5"></i>
+                <span class="text-[10px] font-bold">Receber</span>
+            </button>
+            <button onclick="switchTab('tab-recibos')" id="nav-recibos" class="text-gray-400 flex flex-col items-center py-1.5 rounded-xl">
+                <i class="fa-solid fa-receipt text-lg mb-0.5"></i>
+                <span class="text-[10px] font-bold">Recibos</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MODAL DE CONFIGURAÇÃO NWC -->
+    <div id="modal-config" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-amber-500 rounded-3xl max-w-md w-full p-5 space-y-4">
+            <div class="flex items-center justify-between border-b border-gray-800 pb-2">
+                <h3 class="text-base font-black text-amber-400 flex items-center gap-2">
+                    <i class="fa-solid fa-wallet"></i> Conectar Carteira Lightning
+                </h3>
+                <button onclick="closeConfigModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <div class="text-xs text-gray-300 space-y-2">
+                <p>Cole o endereço <strong>Nostr Wallet Connect (NWC)</strong> da sua carteira (Alby Hub, Mutiny, Umbrel ou Coinos):</p>
+                <textarea id="nwc-uri-input" rows="3" placeholder="nostr+walletconnect://<wallet_pubkey>?relay=wss://...&secret=..." class="w-full bg-gray-950 border border-gray-700 rounded-xl p-2.5 text-xs font-mono text-gray-200 focus:outline-none focus:border-amber-500"></textarea>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="saveAndConnectNWC()" class="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-gray-950 font-black rounded-xl text-xs shadow">
+                    CONECTAR E SINCRONIZAR
+                </button>
+                <button onclick="disconnectNWC()" class="py-3 px-4 bg-gray-800 text-red-400 font-bold rounded-xl text-xs">
+                    DESCONECTAR
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MOTOR JAVASCRIPT REAL -->
+    <script>
+    const STORAGE_KEY = 'nostrpix_live_v1';
+    let appState = {
+        nwcUri: localStorage.getItem('nostrpix_nwc_uri') || '',
+        nwcParams: null,
+        balanceSats: 0,
+        btcBrlRate: 550000.00,
+        receipts: JSON.parse(localStorage.getItem('nostrpix_receipts') || '[]'),
+        pendingPayment: null
+    };
+
+    let nwcWebSocket = null;
+    let videoStream = null;
+    let scanningActive = false;
+
+    // INICIALIZAÇÃO
+    window.addEventListener('load', async () => {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(console.error);
+        }
+        await updateBtcPrice();
+        setInterval(updateBtcPrice, 60000);
+
+        if (appState.nwcUri) {
+            parseNwcUri(appState.nwcUri);
+            syncWalletBalance();
+        }
+        renderReceipts();
+    });
+
+    // CÂMBIO BTC/BRL EM TEMPO REAL
+    async function updateBtcPrice() {
+        try {
+            const res = await fetch('https://economia.awesomeapi.com.br/json/last/BTC-BRL');
+            const data = await res.json();
+            if (data && data.BTCBRL) {
+                appState.btcBrlRate = parseFloat(data.BTCBRL.bid);
+                document.getElementById('btc-brl-rate').innerText = appState.btcBrlRate.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                const satVal = (100 * (appState.btcBrlRate / 1e8)).toFixed(2);
+                document.getElementById('sats-ratio').innerText = `100 Sats ≈ R$ ${satVal.replace('.', ',')}`;
+                updateBalanceDisplay();
+            }
+        } catch (e) {
+            console.warn('Erro ao atualizar câmbio BTC', e);
+        }
+    }
+
+    function updateBalanceDisplay() {
+        document.getElementById('balance-sats').innerText = appState.balanceSats.toLocaleString('pt-BR');
+        const brlVal = (appState.balanceSats * (appState.btcBrlRate / 1e8));
+        document.getElementById('balance-brl').innerText = brlVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // NIP-47 (NOSTR WALLET CONNECT) CLIENT REAL
+    function parseNwcUri(uri) {
+        try {
+            const url = new URL(uri.replace('nostr+walletconnect://', 'https://'));
+            const walletPubkey = (url.hostname || url.pathname.replace('/', '')).toLowerCase();
+            const relay = url.searchParams.get('relay');
+            const secret = url.searchParams.get('secret');
+
+            if (!walletPubkey || !relay || !secret) throw new Error('Parâmetros NWC incompletos');
+
+            appState.nwcParams = { walletPubkey, relay, secret };
+            setWalletConnectedUI(true);
+            return true;
+        } catch (e) {
+            appState.nwcParams = null;
+            setWalletConnectedUI(false);
+            return false;
+        }
+    }
+
+    function setWalletConnectedUI(connected) {
+        const ind = document.getElementById('nwc-indicator');
+        const lbl = document.getElementById('nwc-status-label');
+        const badge = document.getElementById('wallet-type-badge');
+
+        if (connected) {
+            ind.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block';
+            lbl.innerText = 'Carteira Conectada';
+            badge.className = 'px-2.5 py-0.5 bg-emerald-900/60 text-emerald-300 rounded-full text-[10px] font-bold border border-emerald-500/40';
+            badge.innerText = 'LIGHTNING ATIVA';
+        } else {
+            ind.className = 'w-2.5 h-2.5 rounded-full bg-red-500 inline-block animate-pulse';
+            lbl.innerText = 'Carteira Desconectada';
+            badge.className = 'px-2.5 py-0.5 bg-red-900/60 text-red-300 rounded-full text-[10px] font-bold border border-red-500/40';
+            badge.innerText = 'DESCONECTADO';
+        }
+    }
+
+    async function sendNwcRequest(method, params = {}) {
+        if (!appState.nwcParams) throw new Error('Conecte sua carteira primeiro nas configurações.');
+
+        const { walletPubkey, relay, secret } = appState.nwcParams;
+        const clientPrivKey = secret;
+        const clientPubKey = window.NostrTools.getPublicKey(clientPrivKey);
+
+        const payload = JSON.stringify({ method, params });
+        const encryptedContent = await window.NostrTools.nip04.encrypt(clientPrivKey, walletPubkey, payload);
+
+        const reqEvent = {
+            kind: 23194,
+            created_at: Math.floor(Date.now() / 1000),
+            tags: [['p', walletPubkey]],
+            content: encryptedContent
+        };
+
+        const signedEvent = window.NostrTools.finalizeEvent(reqEvent, clientPrivKey);
+
+        return new Promise((resolve, reject) => {
+            const ws = new WebSocket(relay);
+            const timeout = setTimeout(() => {
+                ws.close();
+                reject(new Error('Tempo limite de resposta da carteira excedido (30s).'));
+            }, 30000);
+
+            ws.onopen = () => {
+                const subId = 'nwc_' + Date.now();
+                ws.send(JSON.stringify(['REQ', subId, {
+                    kinds: [23195],
+                    authors: [walletPubkey],
+                    '#p': [clientPubKey],
+                    limit: 1
+                }]));
+                ws.send(JSON.stringify(['EVENT', signedEvent]));
+            };
+
+            ws.onmessage = async (e) => {
+                try {
+                    const msg = JSON.parse(e.data);
+                    if (msg[0] === 'EVENT' && msg[2] && msg[2].kind === 23195) {
+                        clearTimeout(timeout);
+                        const decrypted = await window.NostrTools.nip04.decrypt(clientPrivKey, walletPubkey, msg[2].content);
+                        const response = JSON.parse(decrypted);
+                        ws.close();
+
+                        if (response.error) {
+                            reject(new Error(response.error.message || 'Erro no pagamento NWC'));
+                        } else {
+                            resolve(response.result);
+                        }
+                    }
+                } catch (err) {
+                    // ignora ruído do websocket
+                }
+            };
+
+            ws.onerror = (err) => {
+                clearTimeout(timeout);
+                reject(new Error('Falha de conexão com o Relay NWC: ' + relay));
+            };
+        });
+    }
+
+    async function syncWalletBalance() {
+        if (!appState.nwcParams) return;
+        try {
+            document.getElementById('nwc-status-label').innerText = 'Consultando saldo...';
+            const res = await sendNwcRequest('get_balance');
+            if (res && res.balance != null) {
+                appState.balanceSats = Math.floor(res.balance / 1000);
+                updateBalanceDisplay();
+                setWalletConnectedUI(true);
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Não foi possível sincronizar o saldo: ' + e.message);
+            setWalletConnectedUI(false);
+        }
+    }
+
+    async function executeRealPayment() {
+        if (!appState.pendingPayment) return;
+        const btn = document.getElementById('btn-confirm-pay');
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processando Pagamento...`;
+
+        try {
+            const invoice = appState.pendingPayment.raw;
+            const res = await sendNwcRequest('pay_invoice', { invoice });
+
+            confetti({ particleCount: 100, spread: 70 });
+            speakText('Pagamento Lightning efetuado com sucesso!');
+
+            const receipt = {
+                id: res.preimage || 'ln_' + Date.now(),
+                date: new Date().toLocaleString('pt-BR'),
+                amountSats: appState.pendingPayment.sats,
+                amountBrl: appState.pendingPayment.brl,
+                type: 'Lightning'
+            };
+            appState.receipts.unshift(receipt);
+            localStorage.setItem('nostrpix_receipts', JSON.stringify(appState.receipts));
+
+            alert('✅ Pagamento Confirmado!\nPreimage: ' + (res.preimage || 'Sucesso'));
+            cancelPayment();
+            renderReceipts();
+            syncWalletBalance();
+        } catch (e) {
+            alert('Falha ao processar pagamento: ' + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-bolt"></i> <span>PAGAR AGORA COM LIGHTNING</span>`;
+        }
+    }
+
+    // PROCESSAMENTO DE FATURA (LIGHTNING OU PIX)
+    function processInputCode() {
+        const text = document.getElementById('invoice-input').value.trim();
+        if (!text) { alert('Insira um código válido.'); return; }
+        handleDetectedCode(text);
+    }
+
+    function handleDetectedCode(code) {
+        stopCamera();
+        const clean = code.toLowerCase().replace('lightning:', '').trim();
+
+        if (clean.startsWith('lnbc')) {
+            let sats = parseBolt11AmountSats(clean);
+            let brl = (sats * (appState.btcBrlRate / 1e8));
+
+            appState.pendingPayment = { type: 'lightning', raw: clean, sats, brl };
+
+            document.getElementById('parsed-type').innerText = 'Fatura Bitcoin Lightning';
+            document.getElementById('parsed-amount-sats').innerText = sats ? sats.toLocaleString('pt-BR') + ' sats' : 'Valor aberto';
+            document.getElementById('parsed-amount-brl').innerText = 'R$ ' + brl.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            document.getElementById('payment-confirm-card').classList.remove('hidden');
+
+            speakText(`Fatura Lightning identificada no valor de ${sats} satoshis.`);
+            return;
+        }
+
+        if (code.includes('BR.GOV.BCB.PIX') || code.startsWith('000201')) {
+            alert('Código Pix brasileiro identificado!\nPara pagar com Lightning, pague faturas Lightning diretamente.');
+            return;
+        }
+
+        alert('Formato de código não reconhecido.');
+    }
+
+    function parseBolt11AmountSats(inv) {
+        try {
+            const match = inv.match(/^lnbc(\d+)([munp]?)/);
+            if (!match) return 0;
+            const num = parseInt(match[1], 10);
+            const mult = match[2];
+            let btc = 0;
+            if (mult === 'm') btc = num * 0.001;
+            else if (mult === 'u') btc = num * 0.000001;
+            else if (mult === 'n') btc = num * 0.000000001;
+            else if (mult === 'p') btc = num * 0.000000000001;
+            else btc = num;
+            return Math.round(btc * 1e8);
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    function cancelPayment() {
+        appState.pendingPayment = null;
+        document.getElementById('payment-confirm-card').classList.add('hidden');
+        document.getElementById('invoice-input').value = '';
+    }
+
+    // CÂMERA
+    async function startCamera() {
+        const video = document.getElementById('qr-video');
+        const placeholder = document.getElementById('camera-placeholder');
+        const overlay = document.getElementById('qr-overlay');
+
+        try {
+            videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            video.srcObject = videoStream;
+            video.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+            overlay.classList.remove('hidden');
+            await video.play();
+            scanningActive = true;
+            requestAnimationFrame(scanTick);
+        } catch (e) {
+            alert('Não foi possível acessar a câmera. Cole o código manualmente.');
+        }
+    }
+
+    function scanTick() {
+        if (!scanningActive) return;
+        const video = document.getElementById('qr-video');
+        const canvas = document.getElementById('qr-canvas');
+
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imgData.data, imgData.width, imgData.height);
+            if (code && code.data) {
+                handleDetectedCode(code.data);
+                return;
+            }
+        }
+        if (scanningActive) requestAnimationFrame(scanTick);
+    }
+
+    function stopCamera() {
+        scanningActive = false;
+        if (videoStream) {
+            videoStream.getTracks().forEach(t => t.stop());
+            videoStream = null;
+        }
+        document.getElementById('qr-video').classList.add('hidden');
+        document.getElementById('camera-placeholder').classList.remove('hidden');
+        document.getElementById('qr-overlay').classList.add('hidden');
+    }
+
+    // CONFIG MODAL
+    function openConfigModal() {
+        document.getElementById('nwc-uri-input').value = appState.nwcUri;
+        document.getElementById('modal-config').classList.remove('hidden');
+    }
+    function closeConfigModal() {
+        document.getElementById('modal-config').classList.add('hidden');
+    }
+
+    function saveAndConnectNWC() {
+        const uri = document.getElementById('nwc-uri-input').value.trim();
+        if (!uri) { alert('Cole a URI da sua carteira.'); return; }
+
+        if (parseNwcUri(uri)) {
+            appState.nwcUri = uri;
+            localStorage.setItem('nostrpix_nwc_uri', uri);
+            closeConfigModal();
+            syncWalletBalance();
+            alert('Carteira conectada com sucesso!');
+        } else {
+            alert('URI Nostr Wallet Connect inválida.');
+        }
+    }
+
+    function disconnectNWC() {
+        appState.nwcUri = '';
+        appState.nwcParams = null;
+        appState.balanceSats = 0;
+        localStorage.removeItem('nostrpix_nwc_uri');
+        setWalletConnectedUI(false);
+        updateBalanceDisplay();
+        closeConfigModal();
+    }
+
+    // PIX BRCODE
+    function generatePixBRCode() {
+        const key = document.getElementById('pix-my-key').value.trim();
+        const name = document.getElementById('pix-my-name').value.trim() || 'RECEBEDOR';
+        const amt = parseFloat(document.getElementById('pix-my-amount').value) || 0;
+
+        if (!key) { alert('Informe sua chave Pix.'); return; }
+
+        const amtStr = amt > 0 ? amt.toFixed(2) : '';
+        const cleanName = name.substring(0, 25).normalize('NFD').replace(/[\u0300-\u06ff]/g, '');
+        const cleanKey = key.trim();
+
+        let payload = `00020126${String(cleanKey.length + 22).padStart(2,'0')}0014BR.GOV.BCB.PIX01${String(cleanKey.length).padStart(2,'0')}${cleanKey}520400005303986`;
+        if (amtStr) payload += `54${String(amtStr.length).padStart(2,'0')}${amtStr}`;
+        payload += `5802BR59${String(cleanName.length).padStart(2,'0')}${cleanName}6009FORTALEZA62070503***6304`;
+
+        let crc = 0xFFFF;
+        const bytes = new TextEncoder().encode(payload);
+        for (let i = 0; i < bytes.length; i++) {
+            crc ^= bytes[i] << 8;
+            for (let j = 0; j < 8; j++) {
+                crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+                crc &= 0xFFFF;
+            }
+        }
+        const finalCode = payload + crc.toString(16).toUpperCase().padStart(4, '0');
+
+        document.getElementById('pix-payload-text').innerText = finalCode;
+        const box = document.getElementById('qrcode-target');
+        box.innerHTML = '';
+        new QRCode(box, { text: finalCode, width: 180, height: 180 });
+        document.getElementById('generated-qr-box').classList.remove('hidden');
+    }
+
+    function copyGeneratedPix() {
+        navigator.clipboard.writeText(document.getElementById('pix-payload-text').innerText);
+        alert('Código Pix copiado!');
+    }
+
+    // RECIBOS
+    function renderReceipts() {
+        const el = document.getElementById('receipts-list');
+        el.innerHTML = '';
+        if (!appState.receipts.length) {
+            el.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhum pagamento realizado ainda.</p>';
+            return;
+        }
+        appState.receipts.forEach(r => {
+            const div = document.createElement('div');
+            div.className = 'bg-gray-950 p-3 rounded-xl border border-gray-800 flex justify-between items-center';
+            div.innerHTML = `
+                <div>
+                    <span class="font-bold text-white block">${r.type || 'Pagamento'}</span>
+                    <span class="text-[10px] text-gray-500">${r.date}</span>
+                </div>
+                <div class="text-right font-mono">
+                    <span class="font-bold text-emerald-400 block">${r.amountSats} sats</span>
+                    <span class="text-[10px] text-gray-400">R$ ${r.amountBrl ? r.amountBrl.toFixed(2) : '0,00'}</span>
+                </div>
+            `;
+            el.appendChild(div);
+        });
+    }
+
+    function clearHistory() {
+        if (!confirm('Deseja limpar os recibos?')) return;
+        appState.receipts = [];
+        localStorage.removeItem('nostrpix_receipts');
+        renderReceipts();
+    }
+
+    // VOZ
+    function speakText(txt) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(txt);
+        u.lang = 'pt-BR';
+        window.speechSynthesis.speak(u);
+    }
+
+    function speakBalance() {
+        const brl = (appState.balanceSats * (appState.btcBrlRate / 1e8)).toFixed(2);
+        speakText(`Seu saldo é de ${appState.balanceSats} satoshis, aproximadamente ${brl.replace('.', ',')} reais.`);
+    }
+
+    function startVoiceCommand() {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) { alert('Reconhecimento de voz não suportado neste navegador.'); return; }
+        const rec = new SR();
+        rec.lang = 'pt-BR';
+        document.getElementById('mic-icon').className = 'fa-solid fa-spinner fa-spin';
+
+        rec.onresult = (e) => {
+            const text = e.results[0][0].transcript.toLowerCase();
+            document.getElementById('voice-status').innerText = `Entendido: "${text}"`;
+            if (text.includes('saldo')) speakBalance();
+            else if (text.includes('pagar')) switchTab('tab-pagar');
+            else if (text.includes('receber')) switchTab('tab-receber');
+        };
+        rec.onend = () => {
+            document.getElementById('mic-icon').className = 'fa-solid fa-microphone';
+        };
+        rec.start();
+    }
+
+    // NAVEGAÇÃO
+    function switchTab(id) {
+        stopCamera();
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+
+        document.querySelectorAll('nav button').forEach(b => {
+            b.classList.remove('text-amber-400', 'bg-gray-800');
+            b.classList.add('text-gray-400');
+        });
+        const activeNav = document.getElementById('nav-' + id.replace('tab-', ''));
+        if (activeNav) {
+            activeNav.classList.remove('text-gray-400');
+            activeNav.classList.add('text-amber-400', 'bg-gray-800');
+        }
+    }
+    </script>
+</body>
+</html>
