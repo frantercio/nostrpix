@@ -3,10 +3,18 @@
   "appName": "NostrPix",
   "webDir": "www",
   "server": {
-    "androidScheme": "https",
-    "cleartext": true
+    "androidScheme": "https"
   },
   "android": {
-    "allowMixedContent": true
+    "allowMixedContent": false,
+    "minWebViewVersion": 60
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#00A859",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    }
   }
 }

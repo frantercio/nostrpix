@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#00A859" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss: https: data: blob:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com data:; img-src 'self' https: data: blob:; connect-src 'self' https: wss: ws:; worker-src 'self' blob:;">
   <title>ZapPix & NostrPix — Pague & Converse S.A.</title>
   <link rel="manifest" href="manifest.json">
 
@@ -67,6 +67,28 @@
       overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
     }
   </style>
+
+  <!-- Registro do Service Worker (PWA offline) -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then(reg => {
+          // Detecta atualização disponível
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // Nova versão disponível — opcional: exibir banner
+                  console.log('[ZapPix] Nova versão do app disponível. Recarregue para atualizar.');
+                }
+              });
+            }
+          });
+        }).catch(err => console.warn('[ZapPix] SW registro falhou:', err));
+      });
+    }
+  </script>
 </head>
 <body class="h-full font-sans text-slate-800 antialiased flex flex-col justify-between select-none">
 
@@ -767,7 +789,13 @@
             <span id="nwcModalBadge" class="text-[9px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded font-bold">Desconectado</span>
           </div>
           <p class="text-[11px] text-amber-800">Cole a string de conexão NWC (ex: Alby, Mutiny, Umbrel ou nostrpay):</p>
-          <textarea id="nwcConnectionInput" rows="2" placeholder="nostr+walletconnect://b889...?...relay=wss%3A%2F%2F...&secret=..." class="w-full border border-amber-300 rounded-lg p-2 font-mono text-[10px] bg-white"></textarea>
+          <input type="password" id="nwcConnectionInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+            placeholder="nostr+walletconnect://b889...?relay=wss%3A%2F%2F...&secret=..."
+            class="w-full border border-amber-300 rounded-lg p-2 font-mono text-[10px] bg-white">
+          <p class="text-[10px] text-amber-700 flex items-center gap-1">
+            <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
+            String oculta por segurança (contém sua chave privada)
+          </p>
           
           <div class="flex gap-2">
             <button onclick="saveNwcConnection()" class="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black py-2 rounded-lg text-xs">
@@ -824,16 +852,40 @@
     <button onclick="closeModal('voiceModal')" class="bg-white/20 hover:bg-white/30 text-white font-bold px-6 py-2.5 rounded-full text-xs">Fechar Voz</button>
   </div>
 
-  <!-- LOCK SCREEN (BLOQUEIO DE SESSÃO) -->
+  <!-- LOCK SCREEN (BLOQUEIO DE SESSÃO) com PIN pad inline -->
   <div id="lockScreen" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[200] hidden items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-8 text-center max-w-sm w-full shadow-2xl">
-      <div class="text-5xl mb-4" aria-hidden="true">🔒</div>
-      <h2 class="text-xl font-black text-slate-800 mb-2">Sessão Bloqueada</h2>
-      <p id="lockReason" class="text-sm text-slate-500 mb-5">Por segurança, digite seu PIN para continuar.</p>
-      <button onclick="unlockSessionUI()" class="w-full bg-zappix-green hover:bg-zappix-darkgreen text-white font-black py-3.5 rounded-xl shadow">
-        DESBLOQUEAR COM PIN
-      </button>
-      <p class="text-[10px] text-slate-400 mt-4">Por segurança, sua sessão bloqueia após inatividade.</p>
+    <div class="bg-white rounded-3xl p-6 text-center max-w-sm w-full shadow-2xl space-y-4">
+      <div class="text-5xl mb-2" aria-hidden="true">🔒</div>
+      <h2 class="text-xl font-black text-slate-800">Sessão Bloqueada</h2>
+      <p id="lockReason" class="text-sm text-slate-500">Por segurança, digite seu PIN para continuar.</p>
+
+      <!-- Indicador de dígitos -->
+      <div class="flex justify-center space-x-3 py-1" aria-hidden="true">
+        <div id="lockPinDot0" class="w-4 h-4 rounded-full border-2 border-slate-300 bg-white"></div>
+        <div id="lockPinDot1" class="w-4 h-4 rounded-full border-2 border-slate-300 bg-white"></div>
+        <div id="lockPinDot2" class="w-4 h-4 rounded-full border-2 border-slate-300 bg-white"></div>
+        <div id="lockPinDot3" class="w-4 h-4 rounded-full border-2 border-slate-300 bg-white"></div>
+      </div>
+      <p id="lockPinError" class="hidden text-xs text-red-600 font-bold" role="alert"></p>
+
+      <!-- Teclado numérico -->
+      <div class="grid grid-cols-3 gap-2 max-w-xs mx-auto">
+        <button onclick="pressLockKey('1')" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold text-lg">1</button>
+        <button onclick="pressLockKey('2')" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold text-lg">2</button>
+        <button onclick="pressLockKey('3')" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold text-lg">3</button>
+        <button onclick="pressLockKey('4')" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold text-lg">4</button>
+        <button onclick="pressLockKey('5')" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold text-lg">5</button>
+        <button onclick="pressLockKey('6')" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold text-lg">6</button>
+        <button onclick="pressLockKey('7')" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold text-lg">7</button>
+        <button onclick="pressLockKey('8')" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold text-lg">8</button>
+        <button onclick="pressLockKey('9')" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold text-lg">9</button>
+        <button onclick="clearLockPin()" class="bg-red-50 text-red-600 py-3 rounded-xl font-bold text-xs">Limpar</button>
+        <button onclick="pressLockKey('0')" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold text-lg">0</button>
+        <button onclick="backspaceLockPin()" class="bg-slate-200 py-3 rounded-xl font-bold text-sm" aria-label="Apagar">
+          <i class="fa-solid fa-backspace" aria-hidden="true"></i>
+        </button>
+      </div>
+      <p class="text-[10px] text-slate-400">Sua sessão bloqueia automaticamente após inatividade.</p>
     </div>
   </div>
 
@@ -1412,38 +1464,117 @@
       isLocked = true;
       clearTimeout(sessionIdleTimer);
       currentPinInput = '';
+      lockPinInput = '';
       updatePinDots();
+      updateLockPinDots();
       const ls = document.getElementById('lockScreen');
       if (ls) {
         ls.classList.remove('hidden');
         ls.classList.add('flex');
       }
-      document.getElementById('lockReason').innerText = reason === 'Inatividade' ? 'Sua sessão expirou por inatividade.' : (reason || 'Sessão bloqueada.');
+      const reasonEl = document.getElementById('lockReason');
+      if (reasonEl) {
+        reasonEl.innerText = reason === 'Inatividade'
+          ? 'Sua sessão expirou por inatividade.'
+          : (reason || 'Sessão bloqueada.');
+      }
+      const errEl = document.getElementById('lockPinError');
+      if (errEl) errEl.classList.add('hidden');
       speakText('Sessão bloqueada. Digite seu PIN.');
     }
 
-    async function unlockSessionUI() {
-      const pin = prompt('Digite seu PIN de 4 dígitos:');
-      if (!pin) return;
-      const r = await verifyPin(pin);
-      if (r.ok) {
-        isLocked = false;
-        appState.user.pinFailedAttempts = 0;
-        appState.user.pinLockedUntil = 0;
-        saveState();
-        const ls = document.getElementById('lockScreen');
-        if (ls) {
-          ls.classList.add('hidden');
-          ls.classList.remove('flex');
-        }
-        resetIdleTimer();
-        speakText('Sessão desbloqueada.');
-        showToast('Sessão desbloqueada', 'success');
-      } else if (r.locked) {
-        showToast('Bloqueado por tentativas. Aguarde.', 'error');
-      } else {
-        showToast('PIN incorreto', 'error');
+    // PIN pad da tela de bloqueio
+    let lockPinInput = '';
+    let lockPinVerifying = false;
+
+    function updateLockPinDots() {
+      for (let i = 0; i < 4; i++) {
+        const d = document.getElementById('lockPinDot' + i);
+        if (!d) continue;
+        d.className = i < lockPinInput.length
+          ? 'w-4 h-4 rounded-full bg-zappix-green border-2 border-zappix-green'
+          : 'w-4 h-4 rounded-full border-2 border-slate-300 bg-white';
       }
+    }
+
+    function pressLockKey(n) {
+      if (lockPinVerifying) return;
+      if (appState.user.pinLockedUntil && Date.now() < appState.user.pinLockedUntil) {
+        const rem = Math.ceil((appState.user.pinLockedUntil - Date.now()) / 1000);
+        const errEl = document.getElementById('lockPinError');
+        if (errEl) { errEl.innerText = `Bloqueado. Aguarde ${rem}s.`; errEl.classList.remove('hidden'); }
+        return;
+      }
+      if (lockPinInput.length < 4) {
+        lockPinInput += n;
+        updateLockPinDots();
+        if (lockPinInput.length === 4) setTimeout(verifyLockPin, 150);
+      }
+    }
+    function clearLockPin() { lockPinInput = ''; updateLockPinDots(); }
+    function backspaceLockPin() { lockPinInput = lockPinInput.slice(0, -1); updateLockPinDots(); }
+
+    async function verifyLockPin() {
+      if (lockPinVerifying) return;
+      lockPinVerifying = true;
+      try {
+        const now = Date.now();
+        if (appState.user.pinLockedUntil && now < appState.user.pinLockedUntil) {
+          const errEl = document.getElementById('lockPinError');
+          if (errEl) { errEl.innerText = `Bloqueado. Aguarde ${Math.ceil((appState.user.pinLockedUntil - now)/1000)}s.`; errEl.classList.remove('hidden'); }
+          lockPinInput = '';
+          updateLockPinDots();
+          return;
+        }
+
+        const r = await verifyPin(lockPinInput);
+        if (r.ok) {
+          isLocked = false;
+          lockPinInput = '';
+          appState.user.pinFailedAttempts = 0;
+          appState.user.pinLockedUntil = 0;
+          saveState();
+          const ls = document.getElementById('lockScreen');
+          if (ls) { ls.classList.add('hidden'); ls.classList.remove('flex'); }
+          updateLockPinDots();
+          resetIdleTimer();
+          speakText('Sessão desbloqueada.');
+          showToast('Sessão desbloqueada', 'success');
+        } else if (r.locked) {
+          const errEl = document.getElementById('lockPinError');
+          if (errEl) { errEl.innerText = 'Bloqueado por tentativas. Aguarde.'; errEl.classList.remove('hidden'); }
+          lockPinInput = '';
+          updateLockPinDots();
+          showToast('Bloqueado por tentativas. Aguarde.', 'error');
+        } else {
+          appState.user.pinFailedAttempts = (appState.user.pinFailedAttempts || 0) + 1;
+          if (appState.user.pinFailedAttempts >= 3) {
+            appState.user.pinLockedUntil = Date.now() + 30000;
+            appState.user.pinFailedAttempts = 0;
+            saveState();
+            const errEl = document.getElementById('lockPinError');
+            if (errEl) { errEl.innerText = 'PIN incorreto 3x. Bloqueado por 30s.'; errEl.classList.remove('hidden'); }
+            speakText('Bloqueado por segurança.');
+            showToast('Bloqueado por 30 segundos', 'error');
+          } else {
+            const errEl = document.getElementById('lockPinError');
+            if (errEl) { errEl.innerText = `PIN incorreto. Tentativa ${appState.user.pinFailedAttempts}/3.`; errEl.classList.remove('hidden'); }
+            showToast('PIN incorreto', 'error');
+          }
+          saveState();
+          lockPinInput = '';
+          updateLockPinDots();
+        }
+      } finally {
+        lockPinVerifying = false;
+      }
+    }
+
+    // unlockSessionUI mantido para compatibilidade mas redireciona ao lock pad
+    function unlockSessionUI() {
+      // Foco no primeiro botão do lock pad
+      const firstBtn = document.querySelector('#lockScreen button');
+      if (firstBtn) firstBtn.focus();
     }
 
     function manualLock() {
@@ -2537,7 +2668,12 @@
       const nwc = document.getElementById('nwcConnectionInput');
       if (n) n.value = u.name;
       if (k) k.value = u.pixKey;
-      if (nwc) nwc.value = u.nwcUrl || '';
+      // Não preenche o campo NWC com a URL secreta por segurança
+      // O usuário deve colar novamente se quiser alterar a conexão
+      if (nwc) nwc.value = '';
+      if (nwc) nwc.placeholder = u.nwcUrl
+        ? 'Conexão ativa — cole nova string para substituir'
+        : 'nostr+walletconnect://b889...?relay=wss%3A%2F%2F...&secret=...';
     }
 
     function saveUserProfile() {
@@ -2550,7 +2686,39 @@
     }
 
     async function changePin() {
-      const np = prompt('Digite o novo PIN (4 dígitos numéricos):');
+      // Usando modal de mudança de PIN inline em vez de prompt() bloqueante
+      const existing = document.getElementById('changePinModal');
+      if (existing) { existing.remove(); }
+
+      const overlay = document.createElement('div');
+      overlay.id = 'changePinModal';
+      overlay.className = 'fixed inset-0 bg-slate-900/70 z-[300] flex items-center justify-center p-4';
+      overlay.innerHTML = `
+        <div class="bg-white rounded-2xl p-5 max-w-xs w-full shadow-2xl space-y-3 text-center">
+          <h3 class="font-black text-slate-800">Novo PIN de Segurança</h3>
+          <p class="text-xs text-slate-500">Digite 4 dígitos numéricos</p>
+          <input type="password" id="newPinInput" inputmode="numeric" maxlength="4" pattern="[0-9]{4}"
+            placeholder="••••" autocomplete="new-password"
+            class="w-full border-2 border-slate-300 rounded-xl py-3 text-center text-2xl font-black tracking-widest focus:border-zappix-green focus:outline-none">
+          <div class="flex gap-2">
+            <button onclick="document.getElementById('changePinModal').remove()"
+              class="flex-1 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-sm">
+              Cancelar
+            </button>
+            <button onclick="confirmNewPin()"
+              class="flex-1 bg-zappix-green text-white font-extrabold py-2.5 rounded-xl text-sm shadow">
+              Confirmar PIN
+            </button>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+      setTimeout(() => document.getElementById('newPinInput')?.focus(), 50);
+    }
+
+    async function confirmNewPin() {
+      const input = document.getElementById('newPinInput');
+      const np = (input?.value || '').trim();
+      document.getElementById('changePinModal')?.remove();
       if (!np) return;
       if (!/^\d{4}$/.test(np)) {
         showToast('O PIN deve conter exatamente 4 dígitos', 'error');
