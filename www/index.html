@@ -98,13 +98,13 @@
   </div>
 
   <!-- FAIXA DE ESTADO & DEMO -->
-  <div id="topStatusBar" class="bg-emerald-900 text-emerald-100 text-center text-[11px] sm:text-xs font-bold py-1 px-2 tracking-wide flex items-center justify-between max-w-md mx-auto w-full">
-    <div class="flex items-center gap-1 truncate">
-      <span id="nwcStatusDot" class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-pulse"></span>
-      <span id="nwcStatusLabel" class="truncate">Modo Pix / Demonstração</span>
+  <div id="topStatusBar" class="bg-emerald-900 text-emerald-100 text-center text-[11px] sm:text-xs font-bold py-1.5 px-3 tracking-wide flex items-center justify-between max-w-md mx-auto w-full">
+    <div class="flex items-center gap-1.5 truncate">
+      <span id="nwcStatusDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block animate-pulse"></span>
+      <span id="nwcStatusLabel" class="truncate">Modo Demonstração (Sem risco)</span>
     </div>
     <div class="flex items-center gap-2 font-mono text-[10px]">
-      <span id="btcBrlRate" class="text-amber-300">1 BTC = R$ ...</span>
+      <span id="btcBrlRate" class="text-amber-300">Cotação: 1 BTC = R$ ...</span>
     </div>
   </div>
 
@@ -122,7 +122,7 @@
           </h1>
           <p class="text-xs text-emerald-100 flex items-center gap-1">
             <span class="w-2 h-2 rounded-full bg-emerald-300 inline-block animate-ping" aria-hidden="true"></span>
-            Pague & Converse Instantâneo
+            Dinheiro Fácil & Rápido
           </p>
         </div>
       </div>
@@ -134,17 +134,17 @@
         <button onclick="startVoiceRecognition()" class="p-2 rounded-full bg-zappix-yellow text-zappix-darkgreen font-bold text-sm shadow hover:brightness-110" aria-label="Aperte e fale" title="Aperte e Fale">
           <i class="fa-solid fa-microphone" aria-hidden="true"></i>
         </button>
-        <button onclick="openModal('profileModal')" class="p-2 rounded-full bg-emerald-700/60 hover:bg-emerald-700 text-white text-sm" aria-label="Perfil e configurações" title="Configurações e Carteira">
+        <button onclick="openModal('profileModal')" class="p-2 rounded-full bg-emerald-700/60 hover:bg-emerald-700 text-white text-sm" aria-label="Perfil e configurações" title="Minha Conta">
           <i class="fa-solid fa-user-gear" aria-hidden="true"></i>
         </button>
       </div>
     </div>
 
-    <!-- BANNER LUD-16 LIGHTNING SE CONECTADO -->
-    <div id="lud16Banner" class="hidden bg-emerald-950/80 border-t border-emerald-600/50 px-4 py-1 text-xs text-emerald-200 flex justify-between items-center max-w-md mx-auto font-mono">
+    <!-- BANNER DE ENDEREÇO DE PAGAMENTO SE CONECTADO -->
+    <div id="lud16Banner" class="hidden bg-emerald-950/80 border-t border-emerald-600/50 px-4 py-1.5 text-xs text-emerald-200 flex justify-between items-center max-w-md mx-auto font-mono">
       <div class="flex items-center gap-1.5 truncate">
         <i class="fa-solid fa-bolt text-zappix-yellow"></i>
-        <span class="text-emerald-300">Lightning Address:</span>
+        <span class="text-emerald-300">Meu Endereço Digital:</span>
         <span id="lud16Text" class="font-bold text-white truncate">--</span>
       </div>
       <button onclick="copyLud16()" class="text-zappix-darkgreen bg-zappix-yellow hover:brightness-110 px-2 py-0.5 rounded text-[10px] font-bold shadow">
@@ -159,14 +159,14 @@
     <!-- ABA 1: INÍCIO (HOME) -->
     <section id="view-home" class="view-panel p-4 space-y-4">
       
-      <!-- CARTÃO DE SALDO DUPLO (PIX & LIGHTNING) -->
+      <!-- CARTÃO DE SALDO (PIX & CARTEIRA DIGITAL) -->
       <div class="bg-gradient-to-br from-zappix-green to-emerald-800 rounded-2xl p-5 text-white shadow-xl relative overflow-hidden">
         <div class="absolute -right-6 -bottom-6 opacity-15 text-8xl text-white" aria-hidden="true">
           <i class="fa-solid fa-bolt"></i>
         </div>
         
         <div class="flex justify-between items-center mb-1">
-          <span class="text-xs uppercase tracking-wider font-medium text-emerald-200">Saldo ZapPix Conta Corrente</span>
+          <span class="text-xs uppercase tracking-wider font-semibold text-emerald-200">Meu Saldo em Conta</span>
           <button onclick="toggleBalanceVisibility()" class="text-emerald-200 hover:text-white text-sm" aria-label="Mostrar ou ocultar saldo">
             <i id="balanceEyeIcon" class="fa-solid fa-eye" aria-hidden="true"></i>
           </button>
@@ -177,31 +177,31 @@
           <span id="homeBalanceDisplay" class="text-3xl sm:text-4xl font-extrabold tracking-tight" aria-live="polite">0,00</span>
         </div>
 
-        <!-- SALDO LIGHTNING (SE NWC CONECTADO) -->
+        <!-- SALDO DIGITAL (SE CONECTADO) -->
         <div id="lightningBalanceBox" class="mb-4 bg-emerald-900/60 rounded-xl p-2.5 border border-emerald-500/40 flex items-center justify-between">
           <div>
             <span class="text-[10px] uppercase font-bold text-amber-300 flex items-center gap-1">
-              <i class="fa-solid fa-bolt"></i> Saldo Bitcoin Lightning
+              <i class="fa-solid fa-bolt"></i> Saldo da Carteira Digital (⚡)
             </span>
             <div class="text-lg font-black text-white">
-              <span id="homeSatsDisplay">0</span> <span class="text-xs font-semibold text-emerald-200">sats</span>
-              <span id="homeSatsBrlEquivalent" class="text-xs text-amber-300 font-mono ml-1.5">(R$ 0,00)</span>
+              <span id="homeSatsBrlEquivalent" class="text-base text-amber-300 font-bold">R$ 0,00</span>
+              <span class="text-xs font-semibold text-emerald-200 ml-1">(<span id="homeSatsDisplay">0</span> sats)</span>
             </div>
           </div>
-          <button onclick="refreshNwcBalance()" class="p-2 bg-emerald-800 hover:bg-emerald-700 text-amber-300 rounded-lg text-xs font-bold" title="Atualizar Saldo Lightning">
+          <button onclick="refreshNwcBalance()" class="p-2 bg-emerald-800 hover:bg-emerald-700 text-amber-300 rounded-lg text-xs font-bold" title="Atualizar Saldo">
             <i class="fa-solid fa-arrows-rotate" id="refreshBalanceIcon"></i>
           </button>
         </div>
 
-        <!-- BOTÕES MANDAR E DEPOSITAR -->
+        <!-- BOTÕES MANDAR E RECEBER -->
         <div class="grid grid-cols-2 gap-2 pt-2 border-t border-emerald-600/50">
-          <button onclick="openPixModal()" class="bg-zappix-yellow text-zappix-darkgreen font-extrabold py-2.5 px-3 rounded-xl flex items-center justify-center space-x-2 shadow touch-active hover:bg-yellow-300">
+          <button onclick="openPixModal()" class="bg-zappix-yellow text-zappix-darkgreen font-extrabold py-3 px-3 rounded-xl flex items-center justify-center space-x-2 shadow touch-active hover:bg-yellow-300 text-sm">
             <i class="fa-solid fa-paper-plane text-lg" aria-hidden="true"></i>
-            <span>MANDAR PIX</span>
+            <span>MANDAR DINHEIRO</span>
           </button>
-          <button onclick="openDepositModal()" class="bg-white/20 hover:bg-white/30 text-white font-bold py-2.5 px-3 rounded-xl flex items-center justify-center space-x-2 backdrop-blur-sm touch-active">
+          <button onclick="openDepositModal()" class="bg-white/20 hover:bg-white/30 text-white font-bold py-3 px-3 rounded-xl flex items-center justify-center space-x-2 backdrop-blur-sm touch-active text-sm">
             <i class="fa-solid fa-qrcode text-lg" aria-hidden="true"></i>
-            <span>RECEBER / DEPOSITAR</span>
+            <span>RECEBER / COBRAR</span>
           </button>
         </div>
       </div>
@@ -213,41 +213,41 @@
             <i class="fa-solid fa-glasses"></i>
           </div>
           <div>
-            <h4 class="text-xs font-bold text-amber-900">Modo Seu Pedro (Letras Grandes)</h4>
-            <p class="text-[11px] text-amber-700">Aumenta botões e textos para facilidade total</p>
+            <h4 class="text-xs font-bold text-amber-900">Modo Seu Pedro (Letras e Botões Grandes)</h4>
+            <p class="text-[11px] text-amber-700">Tudo maior e mais fácil de ler e apertar</p>
           </div>
         </div>
         <button onclick="toggleSeuPedroMode()" id="seuPedroBtn" class="bg-amber-600 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow">Ativar</button>
       </div>
 
-      <!-- 4 BOTÕES RÁPIDOS (PAGAR, SCANNER, MAQUININHA, FIADO) -->
+      <!-- 4 BOTÕES RÁPIDOS (PAGAR, ESCANEAR, MAQUININHA, FIADO) -->
       <div class="grid grid-cols-4 gap-3 text-center">
         <button onclick="openPixModal()" class="flex flex-col items-center p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200/80 transition touch-active">
           <div class="w-12 h-12 rounded-full bg-emerald-100 text-zappix-green flex items-center justify-center text-xl mb-1 shadow-sm" aria-hidden="true">
             <i class="fa-solid fa-arrow-up-from-bracket"></i>
           </div>
-          <span class="text-xs font-bold text-slate-700">Pagar Pix</span>
+          <span class="text-xs font-bold text-slate-700">Pagar</span>
         </button>
 
         <button onclick="openScannerModal()" class="flex flex-col items-center p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200/80 transition touch-active">
           <div class="w-12 h-12 rounded-full bg-emerald-100 text-zappix-green flex items-center justify-center text-xl mb-1 shadow-sm" aria-hidden="true">
             <i class="fa-solid fa-camera"></i>
           </div>
-          <span class="text-xs font-bold text-slate-700">Ler QR Code</span>
+          <span class="text-xs font-bold text-slate-700">Escanear</span>
         </button>
 
         <button onclick="switchView('view-pos')" class="flex flex-col items-center p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200/80 transition touch-active">
           <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xl mb-1 shadow-sm" aria-hidden="true">
             <i class="fa-solid fa-calculator"></i>
           </div>
-          <span class="text-xs font-bold text-slate-700">Maquininha</span>
+          <span class="text-xs font-bold text-slate-700">Cobrar</span>
         </button>
 
         <button onclick="switchView('view-fiado')" class="flex flex-col items-center p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200/80 transition touch-active">
           <div class="w-12 h-12 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-xl mb-1 shadow-sm" aria-hidden="true">
             <i class="fa-solid fa-book-bookmark"></i>
           </div>
-          <span class="text-xs font-bold text-slate-700">Caderninho</span>
+          <span class="text-xs font-bold text-slate-700">Fiado</span>
         </button>
       </div>
 
@@ -257,19 +257,19 @@
           <h3 class="font-extrabold text-slate-800 text-sm flex items-center gap-1.5">
             <i class="fa-solid fa-clock-rotate-left text-zappix-green" aria-hidden="true"></i> Últimas Movimentações
           </h3>
-          <button onclick="switchView('view-extrato')" class="text-xs text-zappix-green font-bold">Ver Tudo</button>
+          <button onclick="switchView('view-extrato')" class="text-xs text-zappix-green font-bold">Ver Todas</button>
         </div>
         <div id="homeRecentTransactions" class="space-y-2"></div>
       </div>
 
-      <!-- STATUS DA REDE NOSTR -->
+      <!-- STATUS DA CONEXÃO SEGURA -->
       <div class="bg-slate-900 text-slate-200 rounded-xl p-3 text-xs flex items-center justify-between shadow">
         <div class="flex items-center space-x-2">
           <span id="nostrIndicatorDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true"></span>
-          <span id="nostrIndicatorText" class="font-medium">Rede P2P Nostr & Pix Ativa</span>
+          <span id="nostrIndicatorText" class="font-medium">Conexão Segura e Ativa</span>
         </div>
-        <button onclick="openModal('profileModal')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-amber-400 font-mono px-2 py-0.5 rounded">
-          Configurar Nó
+        <button onclick="openModal('profileModal')" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold px-2.5 py-1 rounded-lg">
+          Minha Carteira
         </button>
       </div>
     </section>
@@ -356,23 +356,23 @@
     <section id="view-pos" class="view-panel hidden p-4 space-y-4">
       <div class="bg-slate-900 text-white p-4 rounded-2xl shadow-xl space-y-3">
         <div class="flex justify-between items-center">
-          <span class="text-xs font-bold text-zappix-yellow uppercase tracking-widest flex items-center gap-1">
-            <i class="fa-solid fa-cash-register" aria-hidden="true"></i> ZapPix POS Balcão
+          <span class="text-xs font-bold text-zappix-yellow uppercase tracking-widest flex items-center gap-1.5">
+            <i class="fa-solid fa-cash-register text-sm" aria-hidden="true"></i> Maquininha ZapPix
           </span>
-          <span id="posAudioBadge" class="text-[10px] bg-emerald-800 text-emerald-200 px-2 py-0.5 rounded font-bold">Voz Caixa Ligada</span>
+          <span id="posAudioBadge" class="text-[10px] bg-emerald-800 text-emerald-200 px-2.5 py-0.5 rounded-full font-bold">Voz & Som Ativados 🔊</span>
         </div>
 
         <div>
-          <label class="text-[11px] text-slate-400 font-medium">VALOR DA COBRANÇA</label>
+          <label class="text-[11px] text-slate-400 font-medium">VALOR DA VENDA</label>
           <div class="text-3xl font-black text-white flex items-baseline gap-1">
             <span class="text-zappix-yellow text-xl">R$</span>
             <span id="posAmountDisplay">0,00</span>
-            <span id="posSatsEquivalent" class="text-xs text-amber-300 font-mono ml-2">(~0 sats)</span>
+            <span id="posSatsEquivalent" class="text-xs text-amber-300 font-mono ml-2">(~0 sats ⚡)</span>
           </div>
         </div>
 
         <div>
-          <input type="text" id="posDescriptionInput" placeholder="Descrição (Ex: 2x Pastel + Caldo de Cana)" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-zappix-yellow">
+          <input type="text" id="posDescriptionInput" placeholder="O que está vendendo? (Ex: Pastel + Caldo de Cana)" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-zappix-yellow">
         </div>
       </div>
 
@@ -399,7 +399,7 @@
         </button>
         <button onclick="generatePosQrCode('lightning')" class="bg-amber-500 text-gray-950 font-extrabold py-3.5 rounded-xl shadow-lg hover:bg-amber-400 flex items-center justify-center space-x-2 text-sm touch-active">
           <i class="fa-solid fa-bolt text-lg" aria-hidden="true"></i>
-          <span>COBRAR SATS ⚡</span>
+          <span>COBRAR NO RAIO ⚡</span>
         </button>
       </div>
 
@@ -420,7 +420,7 @@
             <i class="fa-solid fa-copy" aria-hidden="true"></i> Copia e Cola
           </button>
           <button onclick="simulatePosPaymentReceived()" class="flex-1 bg-emerald-600 text-white text-xs font-bold py-2 rounded-lg shadow hover:bg-emerald-700">
-            <i class="fa-solid fa-circle-check" aria-hidden="true"></i> Simular Pagamento
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i> Testar Recebimento
           </button>
         </div>
       </div>
@@ -431,17 +431,17 @@
     <section id="view-fiado" class="view-panel hidden p-4 space-y-4">
       <div class="bg-gradient-to-r from-purple-800 to-indigo-900 rounded-2xl p-4 text-white shadow-xl space-y-2">
         <div class="flex justify-between items-center">
-          <span class="text-xs font-bold uppercase tracking-wider text-purple-200">Caderninho Digital do Fiado</span>
+          <span class="text-xs font-bold uppercase tracking-wider text-purple-200">Caderninho do Fiado</span>
           <button onclick="openNewFiadoModal()" class="bg-purple-500 hover:bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-lg shadow">+ Anotar Fiado</button>
         </div>
         <div>
-          <span class="text-xs text-purple-200">TOTAL A RECEBER DOS CLIENTES</span>
+          <span class="text-xs text-purple-200">TOTAL QUE TENHO PRA RECEBER</span>
           <div class="text-3xl font-black text-amber-300">R$ <span id="fiadoTotalDisplay">0,00</span></div>
         </div>
       </div>
 
       <div class="space-y-2">
-        <h3 class="font-bold text-slate-800 text-sm">Clientes Devedores</h3>
+        <h3 class="font-bold text-slate-800 text-sm">Quem está devendo</h3>
         <div id="fiadoListContainer" class="space-y-2"></div>
       </div>
     </section>
@@ -465,7 +465,7 @@
     </button>
     <button onclick="switchView('view-pos')" id="nav-view-pos" class="nav-btn flex flex-col items-center py-1.5 px-3 text-slate-400 hover:text-slate-600">
       <i class="fa-solid fa-cash-register text-lg" aria-hidden="true"></i>
-      <span class="text-[10px] font-medium mt-0.5">Maquininha</span>
+      <span class="text-[10px] font-medium mt-0.5">Cobrar</span>
     </button>
     <button onclick="switchView('view-fiado')" id="nav-view-fiado" class="nav-btn flex flex-col items-center py-1.5 px-3 text-slate-400 hover:text-slate-600">
       <i class="fa-solid fa-book text-lg" aria-hidden="true"></i>
@@ -477,12 +477,12 @@
        MODAIS DO SISTEMA
        ============================================================ -->
 
-  <!-- MODAL PIX / LIGHTNING ENVIAR -->
+  <!-- MODAL MANDAR DINHEIRO (PIX OU DIGITAL) -->
   <div id="pixModal" role="dialog" aria-modal="true" aria-labelledby="pixModalTitle" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
       <div class="bg-zappix-green text-white p-4 flex justify-between items-center">
         <h3 id="pixModalTitle" class="font-extrabold text-base flex items-center gap-2">
-          <i class="fa-solid fa-paper-plane text-zappix-yellow" aria-hidden="true"></i> Mandar Pagamento (Pix ou Lightning)
+          <i class="fa-solid fa-paper-plane text-zappix-yellow" aria-hidden="true"></i> Mandar Dinheiro (Pix ou Digital)
         </h3>
         <button onclick="closeModal('pixModal')" class="text-white hover:text-slate-200 text-lg" aria-label="Fechar">
           <i class="fa-solid fa-xmark" aria-hidden="true"></i>
@@ -492,15 +492,15 @@
       <div class="p-4 space-y-4 overflow-y-auto flex-1">
         <!-- PASSO 1: CHAVE OU CONTATO -->
         <div id="pixStep1" class="space-y-3">
-          <label for="pixKeyInput" class="text-xs font-bold text-slate-700">Informe a Chave Pix ou Invoice Lightning (BOLT11)</label>
+          <label for="pixKeyInput" class="text-xs font-bold text-slate-700">Para quem você quer mandar? (Chave Pix ou Código)</label>
           <div class="relative">
-            <input type="text" id="pixKeyInput" placeholder="Chave Pix, lnbc1... ou usuário@domínio" class="w-full border-2 border-slate-300 rounded-xl py-3 px-3 text-sm focus:border-zappix-green focus:outline-none font-medium">
+            <input type="text" id="pixKeyInput" placeholder="Celular, CPF, e-mail ou código..." class="w-full border-2 border-slate-300 rounded-xl py-3 px-3 text-sm focus:border-zappix-green focus:outline-none font-medium">
             <button onclick="openScannerModal()" class="absolute right-2 top-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-bold">
-              <i class="fa-solid fa-camera" aria-hidden="true"></i> Scan
+              <i class="fa-solid fa-camera" aria-hidden="true"></i> Ler QR
             </button>
           </div>
 
-          <p class="text-xs text-slate-500 font-semibold">Ou selecione um contato salvo:</p>
+          <p class="text-xs text-slate-500 font-semibold">Ou escolha alguém da lista:</p>
           <div id="pixContactsQuickSelect" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
 
           <button onclick="goToPixStep2()" class="w-full bg-zappix-green text-white font-extrabold py-3 rounded-xl shadow hover:bg-zappix-darkgreen">Continuar para Valor</button>
@@ -513,7 +513,7 @@
               <i class="fa-solid fa-user"></i>
             </div>
             <div class="truncate">
-              <p class="text-xs text-slate-500">Destinatário Selecionado:</p>
+              <p class="text-xs text-slate-500">Quem vai receber:</p>
               <h4 id="pixRecipientNameDisplay" class="font-bold text-sm text-slate-800 truncate">Nome do Destinatário</h4>
               <p id="pixRecipientKeyDisplay" class="text-[11px] text-slate-500 font-mono truncate">Chave: ...</p>
             </div>
@@ -583,33 +583,33 @@
     </div>
   </div>
 
-  <!-- MODAL DEPOSITAR / COBRAR COM ABAS PIX & LIGHTNING -->
+  <!-- MODAL DEPOSITAR / COBRAR COM ABAS PIX & CARTEIRA DIGITAL -->
   <div id="depositModal" role="dialog" aria-modal="true" aria-labelledby="depositTitle" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-4 space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
         <h3 id="depositTitle" class="font-extrabold text-base text-slate-800 flex items-center gap-2">
-          <i class="fa-solid fa-qrcode text-zappix-green" aria-hidden="true"></i> Receber / Depositar
+          <i class="fa-solid fa-qrcode text-zappix-green" aria-hidden="true"></i> Receber Dinheiro
         </h3>
         <button onclick="closeModal('depositModal')" class="text-slate-400 hover:text-slate-600 text-lg" aria-label="Fechar">
           <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         </button>
       </div>
 
-      <!-- SELETOR DE MODO (PIX OU LIGHTNING SATS) -->
+      <!-- SELETOR DE MODO (PIX OU CARTEIRA DIGITAL) -->
       <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl text-xs font-bold">
-        <button onclick="setDepositMode('pix')" id="depTabPix" class="py-2 rounded-lg bg-zappix-green text-white shadow">Pix (R$)</button>
-        <button onclick="setDepositMode('lightning')" id="depTabLightning" class="py-2 rounded-lg text-slate-600 hover:text-slate-900">Lightning (Sats ⚡)</button>
+        <button onclick="setDepositMode('pix')" id="depTabPix" class="py-2.5 rounded-lg bg-zappix-green text-white shadow">Pix Comum (R$)</button>
+        <button onclick="setDepositMode('lightning')" id="depTabLightning" class="py-2.5 rounded-lg text-slate-600 hover:text-slate-900">Pagamento Rápido (⚡)</button>
       </div>
 
       <div class="space-y-3">
-        <label id="depositAmountLabel" for="depositAmountInput" class="text-xs font-bold text-slate-700">Informe o valor em Reais (R$)</label>
+        <label id="depositAmountLabel" for="depositAmountInput" class="text-xs font-bold text-slate-700">Quanto deseja receber em Reais (R$)</label>
         <div class="relative">
           <span id="depositCurrencyPrefix" class="absolute left-3 top-3 text-lg font-bold text-zappix-green">R$</span>
           <input type="number" id="depositAmountInput" value="50.00" step="10" class="w-full border-2 border-slate-300 rounded-xl py-2.5 pl-12 pr-3 font-extrabold text-xl focus:outline-none focus:border-zappix-green">
         </div>
 
-        <button onclick="generateDepositQR()" id="btnGenerateDeposit" class="w-full bg-zappix-green text-white font-bold py-2.5 rounded-xl shadow">
-          Gerar QR Code de Cobrança
+        <button onclick="generateDepositQR()" id="btnGenerateDeposit" class="w-full bg-zappix-green text-white font-extrabold py-3 rounded-xl shadow text-sm">
+          Gerar QR Code para Receber
         </button>
 
         <!-- CONTAINER DO QR CODE -->
@@ -618,11 +618,11 @@
           <p id="depositPixPayloadText" class="text-[10px] font-mono text-slate-500 break-all max-h-16 overflow-y-auto bg-white p-2 rounded border"></p>
 
           <div class="flex gap-2">
-            <button onclick="copyDepositPayload()" class="flex-1 bg-slate-200 text-slate-800 text-xs font-bold py-2 rounded-lg">
+            <button onclick="copyDepositPayload()" class="flex-1 bg-slate-200 text-slate-800 text-xs font-bold py-2.5 rounded-lg">
               <i class="fa-solid fa-copy" aria-hidden="true"></i> Copiar Código
             </button>
-            <button onclick="simulateBankWebhookDeposit()" class="flex-1 bg-zappix-yellow text-zappix-darkgreen text-xs font-black py-2 rounded-lg shadow">
-              <i class="fa-solid fa-building-columns" aria-hidden="true"></i> Simular Recebimento
+            <button onclick="simulateBankWebhookDeposit()" class="flex-1 bg-zappix-yellow text-zappix-darkgreen text-xs font-black py-2.5 rounded-lg shadow">
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i> Testar Recebimento
             </button>
           </div>
         </div>
@@ -633,18 +633,18 @@
   <!-- MODAL SCANNER DE QR CODE (CÂMERA & COPIAR) -->
   <div id="scannerModal" role="dialog" aria-modal="true" aria-label="Escanear QR Code" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 hidden flex flex-col justify-between p-4">
     <div class="flex justify-between items-center text-white">
-      <h3 class="font-bold text-base"><i class="fa-solid fa-camera" aria-hidden="true"></i> Escanear QR Code Pix ou Lightning</h3>
+      <h3 class="font-bold text-base"><i class="fa-solid fa-camera" aria-hidden="true"></i> Ler QR Code com a Câmera</h3>
       <button onclick="closeScannerModal()" class="text-white text-xl p-2" aria-label="Fechar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
     </div>
 
     <div class="w-full max-w-sm mx-auto bg-black rounded-2xl overflow-hidden border-2 border-zappix-yellow shadow-2xl relative">
       <div id="qrReaderView" class="w-full h-64"></div>
-      <p class="text-center text-xs text-white bg-black/60 py-2">Aponte a câmera para o QR Code</p>
+      <p class="text-center text-xs text-white bg-black/60 py-2">Aponte a câmera para o QR Code Pix ou da Carteira</p>
     </div>
 
     <div class="space-y-2 max-w-sm mx-auto w-full">
       <button onclick="pasteQrFromClipboard()" class="w-full bg-white text-slate-800 font-bold py-3 rounded-xl shadow flex items-center justify-center gap-2">
-        <i class="fa-solid fa-paste text-zappix-green" aria-hidden="true"></i> Colar QR Code Copiado
+        <i class="fa-solid fa-paste text-zappix-green" aria-hidden="true"></i> Colar Código Copiado
       </button>
       <button onclick="closeScannerModal()" class="w-full bg-slate-800 text-slate-300 font-semibold py-2.5 rounded-xl">Cancelar</button>
     </div>
@@ -659,28 +659,28 @@
             <div class="w-8 h-8 rounded-full bg-zappix-green text-white flex items-center justify-center font-bold text-sm" aria-hidden="true">⚡</div>
             <div>
               <h3 id="compTitle" class="font-black text-sm text-zappix-darkgreen uppercase">ZapPix S.A.</h3>
-              <p class="text-[10px] text-slate-400">Comprovante de Pagamento & Transferência</p>
+              <p class="text-[10px] text-slate-400">Comprovante de Transferência</p>
             </div>
           </div>
-          <span id="compBadge" class="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full">CONFIRMADO</span>
+          <span id="compBadge" class="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full">PAGAMENTO CONFIRMADO ✅</span>
         </div>
 
         <div class="text-center py-2 space-y-1">
-          <span class="text-xs text-slate-500 font-medium">VALOR PROCESSADO</span>
+          <span class="text-xs text-slate-500 font-medium">VALOR ENVIADO</span>
           <div id="compAmount" class="text-3xl font-black text-slate-900">R$ 0,00</div>
           <p id="compDate" class="text-[11px] text-slate-400 font-mono">--/--/---- --:--:--</p>
         </div>
 
         <div class="bg-slate-50 rounded-2xl p-3 space-y-2 text-xs border border-slate-200">
           <div>
-            <span class="text-slate-400 block text-[10px] font-bold">RECEBEDOR</span>
+            <span class="text-slate-400 block text-[10px] font-bold">QUEM RECEBEU</span>
             <span id="compRecipientName" class="font-bold text-slate-800 text-sm">--</span>
             <p id="compRecipientKey" class="text-slate-500 font-mono text-[11px]">Chave: --</p>
             <p id="compRecipientBank" class="text-slate-500 text-[11px]">Instituição: --</p>
           </div>
           <hr class="border-slate-200">
           <div>
-            <span class="text-slate-400 block text-[10px] font-bold">PAGADOR</span>
+            <span class="text-slate-400 block text-[10px] font-bold">QUEM PAGOU</span>
             <span id="compSenderName" class="font-bold text-slate-800">--</span>
             <p id="compSenderCpf" class="text-slate-500 font-mono text-[11px]">CPF: ***.***.***-**</p>
             <p class="text-slate-500 text-[11px]">Instituição: ZapPix Pagamentos</p>
@@ -688,21 +688,24 @@
         </div>
 
         <div class="space-y-1 text-[10px] text-slate-400 font-mono border-t border-slate-200 pt-2">
-          <div><span class="font-bold">ID Transação:</span> <span id="compE2EId">E00000...</span></div>
-          <div><span class="font-bold">Hash Integridade:</span> <span id="compShaHash">a1b2c3...</span></div>
+          <div><span class="font-bold">Código do Comprovante:</span> <span id="compE2EId">E00000...</span></div>
+          <div><span class="font-bold">Autenticidade:</span> <span id="compShaHash">a1b2c3...</span></div>
         </div>
       </div>
 
       <div class="bg-slate-100 p-3 border-t border-slate-200 space-y-2">
+        <button onclick="shareComprovanteWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm py-2.5 rounded-xl shadow flex items-center justify-center gap-2">
+          <i class="fa-brands fa-whatsapp text-lg" aria-hidden="true"></i> Mandar Comprovante no Zap
+        </button>
         <div class="grid grid-cols-2 gap-2">
-          <button onclick="speakComprovante()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl shadow flex items-center justify-center gap-1.5">
+          <button onclick="speakComprovante()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs py-2 rounded-xl flex items-center justify-center gap-1.5">
             <i class="fa-solid fa-volume-high" aria-hidden="true"></i> Ouvir Voz
           </button>
-          <button onclick="downloadComprovantePng()" class="bg-zappix-yellow text-zappix-darkgreen font-extrabold text-xs py-2.5 rounded-xl shadow flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-file-image" aria-hidden="true"></i> Baixar Imagem PNG
+          <button onclick="downloadComprovantePng()" class="bg-zappix-yellow text-zappix-darkgreen font-extrabold text-xs py-2 rounded-xl shadow flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-image" aria-hidden="true"></i> Salvar Foto
           </button>
         </div>
-        <button onclick="closeModal('comprovanteModal')" class="w-full bg-slate-300 hover:bg-slate-400 text-slate-800 font-bold text-xs py-2 rounded-xl">Fechar Comprovante</button>
+        <button onclick="closeModal('comprovanteModal')" class="w-full bg-slate-300 hover:bg-slate-400 text-slate-800 font-bold text-xs py-2 rounded-xl">Fechar</button>
       </div>
     </div>
   </div>
@@ -720,12 +723,12 @@
           <input type="text" id="newContactName" placeholder="Ex: Seu Pedro do Mercado" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:outline-none focus:border-zappix-green">
         </div>
         <div>
-          <label for="newContactKey" class="font-bold text-slate-700">Chave Pix ou Lightning Address</label>
+          <label for="newContactKey" class="font-bold text-slate-700">Chave Pix, Celular ou Código Digital</label>
           <input type="text" id="newContactKey" placeholder="Ex: 85988887777 ou pedro@getalby.com" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:outline-none focus:border-zappix-green font-mono">
         </div>
         <div>
-          <label for="newContactBank" class="font-bold text-slate-700">Instituição / Banco</label>
-          <input type="text" id="newContactBank" value="ZapPix / Lightning" class="w-full border border-slate-300 rounded-lg p-2 text-xs">
+          <label for="newContactBank" class="font-bold text-slate-700">Banco / Instituição</label>
+          <input type="text" id="newContactBank" value="ZapPix / Carteira Digital" class="w-full border border-slate-300 rounded-lg p-2 text-xs">
         </div>
         <button onclick="saveNewContact()" class="w-full bg-zappix-green text-white font-extrabold py-3 rounded-xl shadow mt-2">Salvar Contato</button>
       </div>
@@ -753,7 +756,7 @@
           <input type="number" id="fiadoAmountInput" step="0.50" placeholder="0.00" class="w-full border border-slate-300 rounded-lg p-2.5 text-lg font-bold text-purple-900">
         </div>
         <div>
-          <label for="fiadoItemsInput" class="font-bold text-slate-700">Descrição dos Itens Fiados</label>
+          <label for="fiadoItemsInput" class="font-bold text-slate-700">O que levou fiado?</label>
           <input type="text" id="fiadoItemsInput" placeholder="Ex: 1kg Arroz + Café + Açúcar" class="w-full border border-slate-300 rounded-lg p-2">
         </div>
         <button onclick="saveFiadoEntry()" class="w-full bg-purple-700 text-white font-extrabold py-3 rounded-xl shadow mt-2 hover:bg-purple-800">Registrar no Caderninho</button>
@@ -761,11 +764,11 @@
     </div>
   </div>
 
-  <!-- MODAL PERFIL & CONFIGURAÇÕES (COM NOSTR NWC) -->
+  <!-- MODAL PERFIL & CONFIGURAÇÕES (CARTEIRA DIGITAL) -->
   <div id="profileModal" role="dialog" aria-modal="true" aria-labelledby="profileTitle" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl p-4 space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-2">
-        <h3 id="profileTitle" class="font-extrabold text-base text-slate-800">Meu Perfil & Carteira Nostr</h3>
+        <h3 id="profileTitle" class="font-extrabold text-base text-slate-800">Minha Conta & Carteira Digital</h3>
         <button onclick="closeModal('profileModal')" class="text-slate-400 text-lg" aria-label="Fechar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
       </div>
 
@@ -780,26 +783,29 @@
           <input type="text" id="profileUserPixKey" class="w-full border border-slate-300 rounded-lg p-2 font-mono">
         </div>
 
-        <!-- CONEXÃO NOSTR NWC (NIP-47) -->
+        <!-- CONEXÃO CARTEIRA DIGITAL -->
         <div class="bg-amber-50 border border-amber-300 rounded-xl p-3 space-y-2">
           <div class="flex justify-between items-center">
             <span class="font-black text-amber-900 flex items-center gap-1">
-              <i class="fa-solid fa-bolt text-amber-600"></i> Conexão Carteira Lightning (NWC)
+              <i class="fa-solid fa-bolt text-amber-600"></i> Carteira Digital Rápida (⚡)
             </span>
             <span id="nwcModalBadge" class="text-[9px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded font-bold">Desconectado</span>
           </div>
-          <p class="text-[11px] text-amber-800">Cole a string de conexão NWC (ex: Alby, Mutiny, Umbrel ou nostrpay):</p>
+          <p class="text-[11px] text-amber-800">Conecte sua carteira para mandar e receber pagamentos instantâneos:</p>
+          
+          <button onclick="scanNwcQrCode()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-black py-2.5 px-3 rounded-xl shadow flex items-center justify-center gap-2 text-xs">
+            <i class="fa-solid fa-qrcode text-base" aria-hidden="true"></i>
+            <span>📷 Conectar Lendo QR Code (Mais Fácil)</span>
+          </button>
+
+          <p class="text-[10px] text-amber-700 text-center font-bold">OU COLE O CÓDIGO DA CARTEIRA:</p>
           <input type="password" id="nwcConnectionInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-            placeholder="nostr+walletconnect://b889...?relay=wss%3A%2F%2F...&secret=..."
+            placeholder="Cole aqui o código da sua carteira..."
             class="w-full border border-amber-300 rounded-lg p-2 font-mono text-[10px] bg-white">
-          <p class="text-[10px] text-amber-700 flex items-center gap-1">
-            <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
-            String oculta por segurança (contém sua chave privada)
-          </p>
           
           <div class="flex gap-2">
-            <button onclick="saveNwcConnection()" class="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black py-2 rounded-lg text-xs">
-              Conectar Carteira
+            <button onclick="saveNwcConnection()" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-black py-2 rounded-lg text-xs">
+              Salvar Código
             </button>
             <button onclick="disconnectNwc()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-3 rounded-lg text-xs">
               Desconectar
@@ -810,19 +816,19 @@
         <!-- PIN DE SEGURANÇA -->
         <div class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg p-2">
           <div>
-            <p class="font-bold text-slate-700">PIN de Segurança</p>
-            <p class="text-[11px] text-slate-500">Hash SHA-256 com salt · bloqueio após 3 erros</p>
+            <p class="font-bold text-slate-700">Senha de 4 Números (PIN)</p>
+            <p class="text-[11px] text-slate-500">Proteção para confirmação de envios</p>
           </div>
           <button onclick="changePin()" class="bg-slate-800 text-white font-bold px-3 py-1.5 rounded-lg text-xs">
-            <i class="fa-solid fa-lock" aria-hidden="true"></i> Mudar PIN
+            <i class="fa-solid fa-lock" aria-hidden="true"></i> Mudar Senha
           </button>
         </div>
 
         <button onclick="manualLock()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl shadow">
-          <i class="fa-solid fa-lock" aria-hidden="true"></i> Bloquear Sessão Agora
+          <i class="fa-solid fa-lock" aria-hidden="true"></i> Bloquear Tela Agora
         </button>
 
-        <button onclick="saveUserProfile()" class="w-full bg-zappix-green text-white font-bold py-2.5 rounded-xl shadow">Salvar Dados do Perfil</button>
+        <button onclick="saveUserProfile()" class="w-full bg-zappix-green text-white font-bold py-2.5 rounded-xl shadow">Salvar Dados</button>
 
         <hr class="border-slate-200">
         <h4 class="font-extrabold text-slate-800">Backup dos Dados</h4>
@@ -1169,12 +1175,12 @@
 
     function initNwcFromState() {
       if (!appState.user.nwcUrl) {
-        updateNwcStatusUI(false, 'Modo Pix / Demonstração');
+        updateNwcStatusUI(false, 'Modo Demonstração (Sem risco)');
         return;
       }
       const parsed = parseNwcUrl(appState.user.nwcUrl);
       if (!parsed) {
-        updateNwcStatusUI(false, 'NWC Inválido');
+        updateNwcStatusUI(false, 'Código de Carteira Inválido');
         return;
       }
       nwcParsed = parsed;
@@ -1190,7 +1196,7 @@
         nwcRelaySocket = new WebSocket(nwcParsed.relay);
 
         nwcRelaySocket.onopen = () => {
-          updateNwcStatusUI(true, '⚡ Lightning Conectada');
+          updateNwcStatusUI(true, '⚡ Carteira Conectada');
           subscribeNwcResponses();
           refreshNwcBalance();
           fetchNwcInfo();
@@ -1209,11 +1215,11 @@
 
         nwcRelaySocket.onerror = (e) => {
           console.warn('WebSocket NWC erro:', e);
-          updateNwcStatusUI(false, 'Erro Conexão Lightning');
+          updateNwcStatusUI(false, 'Tentando Reconectar Carteira...');
         };
 
         nwcRelaySocket.onclose = () => {
-          updateNwcStatusUI(false, 'Lightning Desconectada');
+          updateNwcStatusUI(false, 'Carteira Desconectada');
         };
       } catch (e) {
         console.error('Falha ao conectar NWC Relay:', e);
@@ -1359,7 +1365,7 @@
       saveState();
       nwcParsed = parsed;
       connectNwcRelay();
-      showToast('Conectando à carteira Lightning...', 'success');
+      showToast('Conectando à sua carteira digital...', 'success');
       closeModal('profileModal');
     }
 
@@ -1373,16 +1379,16 @@
         nwcRelaySocket = null;
       }
       nwcParsed = null;
-      updateNwcStatusUI(false, 'Modo Pix / Demonstração');
-      showToast('Carteira Lightning desconectada', 'info');
+      updateNwcStatusUI(false, 'Modo Demonstração (Sem risco)');
+      showToast('Carteira digital desconectada', 'info');
       closeModal('profileModal');
     }
 
     function copyLud16() {
       if (!appState.user.lud16) return;
       copyToClipboard(appState.user.lud16);
-      speakText('Endereço Lightning copiado!');
-      showToast('Lightning Address copiado: ' + appState.user.lud16, 'success');
+      speakText('Endereço copiado!');
+      showToast('Endereço copiado: ' + appState.user.lud16, 'success');
     }
 
     /* ============================================================
@@ -1740,7 +1746,7 @@
           const rest = parts.slice(1).join('1');
           const dIdx = rest.indexOf('p');
           // Tentativa simplificada de memo
-          return 'Pagamento Lightning';
+          return 'Pagamento Rápido ⚡';
         }
       } catch (e) {}
       return '';
@@ -1753,8 +1759,8 @@
         if (k.toLowerCase().startsWith('lnbc')) {
           currentPixDraft.isLightning = true;
           currentPixDraft.bolt11 = k;
-          currentPixDraft.recipientName = 'Invoice Lightning';
-          currentPixDraft.recipientBank = 'Rede Bitcoin Lightning ⚡';
+          currentPixDraft.recipientName = 'Código de Pagamento ⚡';
+          currentPixDraft.recipientBank = 'Rede Digital Instantânea ⚡';
           const memo = extractBolt11Memo(k);
           if (memo) currentPixDraft.memo = memo;
         } else {
@@ -1763,14 +1769,14 @@
             currentPixDraft.recipientName = f.name;
             currentPixDraft.recipientBank = f.bank || 'ZapPix';
           } else {
-            currentPixDraft.recipientName = 'Destinatário Pix (' + (k.includes('@') ? 'E-mail / LUD16' : 'Chave Externa') + ')';
+            currentPixDraft.recipientName = 'Destinatário Pix (' + (k.includes('@') ? 'E-mail ou Endereço Digital' : 'Chave Externa') + ')';
             currentPixDraft.recipientBank = 'Instituição Financeira';
           }
         }
       }
 
       if (!currentPixDraft.recipientKey) {
-        showToast('Informe uma chave Pix ou invoice válida', 'error');
+        showToast('Informe uma chave Pix ou código válido', 'error');
         return;
       }
 
@@ -1787,7 +1793,7 @@
       const label = document.getElementById('pixAmountLabel');
       const prefix = document.getElementById('pixCurrencyPrefix');
       if (currentPixDraft.isLightning) {
-        label.innerText = 'VALOR A PAGAR (SATOSHIS ⚡)';
+        label.innerText = 'VALOR A PAGAR (SALDO DIGITAL ⚡)';
         prefix.innerText = '⚡';
       } else {
         label.innerText = 'VALOR A TRANSFERIR (R$)';
@@ -1812,7 +1818,7 @@
 
       if (currentPixDraft.isLightning) {
         if (nwcParsed && amt > (appState.user.satsBalance || 0)) {
-          showToast('Saldo em Satoshis insuficiente na carteira Lightning', 'error');
+          showToast('Saldo digital insuficiente na carteira conectada', 'error');
           return;
         }
       } else {
@@ -1909,13 +1915,13 @@
 
         // Se for pagamento Lightning via NWC
         if (currentPixDraft.isLightning && nwcParsed) {
-          showToast('Enviando pagamento via Lightning...', 'info');
+          showToast('Enviando pagamento digital instantâneo...', 'info');
           try {
             await sendNwcRequest('pay_invoice', { invoice: currentPixDraft.bolt11 });
             appState.user.satsBalance = Math.max(0, (appState.user.satsBalance || 0) - currentPixDraft.amount);
-            showToast('⚡ Pagamento Lightning confirmado na rede!', 'success');
+            showToast('⚡ Pagamento digital confirmado!', 'success');
           } catch (err) {
-            showToast('Falha no pagamento Lightning: ' + err.message, 'error');
+            showToast('Falha no envio do pagamento: ' + err.message, 'error');
             clearPin();
             return;
           }
@@ -1957,6 +1963,7 @@
 
         saveState();
         closeModal('pixModal');
+        playCashRegisterSound();
         safeConfetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
         speakText(`Pagamento de ${currentPixDraft.isLightning ? `${currentPixDraft.amount} satoshis` : `R$ ${formatMoney(currentPixDraft.amount)}`} concluído!`);
         openComprovanteForTx(newTx.id);
@@ -1978,17 +1985,17 @@
       const btn = document.getElementById('btnGenerateDeposit');
 
       if (mode === 'pix') {
-        tabPix.className = 'py-2 rounded-lg bg-zappix-green text-white shadow';
-        tabLn.className = 'py-2 rounded-lg text-slate-600 hover:text-slate-900';
-        label.innerText = 'Informe o valor em Reais (R$)';
+        tabPix.className = 'py-2.5 rounded-lg bg-zappix-green text-white shadow';
+        tabLn.className = 'py-2.5 rounded-lg text-slate-600 hover:text-slate-900';
+        label.innerText = 'Quanto deseja receber em Reais (R$)';
         prefix.innerText = 'R$';
-        btn.innerText = 'Gerar QR Code Pix';
+        btn.innerText = 'Gerar QR Code para Receber';
       } else {
-        tabLn.className = 'py-2 rounded-lg bg-amber-500 text-gray-950 shadow';
-        tabPix.className = 'py-2 rounded-lg text-slate-600 hover:text-slate-900';
-        label.innerText = 'Informe o valor em Satoshis (sats ⚡)';
+        tabLn.className = 'py-2.5 rounded-lg bg-amber-500 text-gray-950 shadow';
+        tabPix.className = 'py-2.5 rounded-lg text-slate-600 hover:text-slate-900';
+        label.innerText = 'Quanto deseja receber (em sats ⚡)';
         prefix.innerText = '⚡';
-        btn.innerText = 'Gerar Invoice Lightning';
+        btn.innerText = 'Gerar QR Code Rápido (⚡)';
       }
       document.getElementById('depositQrContainer').classList.add('hidden');
     }
@@ -2005,16 +2012,16 @@
       let payload = '';
 
       if (currentDepositMode === 'lightning' && nwcParsed) {
-        showToast('Gerando fatura Lightning via nó remoto...', 'info');
+        showToast('Gerando cobrança instantânea na rede...', 'info');
         try {
           const res = await sendNwcRequest('make_invoice', {
             amount: amt * 1000, // sats to msats
-            description: 'Recebimento ZapPix Zap'
+            description: 'Recebimento ZapPix'
           });
           payload = res.invoice;
           startInvoiceWatcher(payload, amt);
         } catch (e) {
-          showToast('Erro make_invoice NWC: ' + e.message, 'error');
+          showToast('Erro ao gerar cobrança: ' + e.message, 'error');
           return;
         }
       } else {
@@ -2026,7 +2033,7 @@
         document.getElementById('depositPixPayloadText').innerText = payload;
         document.getElementById('depositQrContainer').classList.remove('hidden');
       } else {
-        showToast('QR Code gerado. Use o botão Copiar Código.', 'error');
+        showToast('Código gerado. Use o botão Copiar Código.', 'error');
       }
     }
 
@@ -2045,16 +2052,17 @@
               amount: satsAmount,
               currency: 'SATS',
               date: formatLocalDateTime(),
-              name: 'Recebimento Lightning ⚡',
-              key: 'Rede Lightning',
-              bank: 'NWC Wallet',
+              name: 'Recebimento Carteira Digital ⚡',
+              key: 'Rede Instantânea',
+              bank: 'Carteira Conectada',
               e2eId: generateE2EId(),
               shaHash: generateFakeHash()
             });
             saveState();
             closeModal('depositModal');
+            playCashRegisterSound();
             safeConfetti({ particleCount: 120, spread: 80 });
-            speakText(`Pagamento Lightning de ${satsAmount} satoshis recebido com sucesso!`);
+            speakText(`Dinheiro na conta! Recebido ${satsAmount} satoshis.`);
           }
         } catch (e) {}
       }, 3500);
@@ -2081,7 +2089,7 @@
         amount: amt,
         currency: currentDepositMode === 'lightning' ? 'SATS' : 'BRL',
         date: formatLocalDateTime(),
-        name: currentDepositMode === 'lightning' ? 'Depósito Lightning (Simulado)' : 'Depósito Pix Recebido',
+        name: currentDepositMode === 'lightning' ? 'Depósito Digital Recebido ⚡' : 'Depósito Pix Recebido',
         key: appState.user.pixKey,
         bank: 'Banco Emissor',
         e2eId: generateE2EId(),
@@ -2090,8 +2098,9 @@
 
       saveState();
       closeModal('depositModal');
+      playCashRegisterSound();
       safeConfetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-      speakText(`Depósito recebido! ${currentDepositMode === 'lightning' ? `${amt} sats` : `R$ ${formatMoney(amt)}`} adicionados.`);
+      speakText(`Dinheiro na conta! ${currentDepositMode === 'lightning' ? `${amt} satoshis` : `R$ ${formatMoney(amt)}`} adicionados.`);
     }
 
     function generateEmvCoPixPayload(key, name, amount) {
@@ -2224,6 +2233,22 @@
       if (!activeComprovanteTx) return;
       const isSats = activeComprovanteTx.currency === 'SATS';
       speakText(`Comprovante ZapPix. Valor ${isSats ? `${activeComprovanteTx.amount} satoshis` : `${formatMoney(activeComprovanteTx.amount)} reais`}. Recebedor ${activeComprovanteTx.name}. Data ${activeComprovanteTx.date}.`);
+    }
+
+    function shareComprovanteWhatsApp() {
+      if (!activeComprovanteTx) return;
+      const tx = activeComprovanteTx;
+      const isSats = tx.currency === 'SATS';
+      const valStr = isSats ? `${tx.amount} sats ⚡` : `R$ ${formatMoney(tx.amount)}`;
+      const msg = `*⚡ Comprovante ZapPix*\n` +
+                  `*Valor:* ${valStr}\n` +
+                  `*Para:* ${tx.name}\n` +
+                  `*Data:* ${tx.date}\n` +
+                  `*Código:* ${tx.e2eId || 'E0000'}\n` +
+                  `_Pagamento confirmado com sucesso via ZapPix S.A._`;
+      const encoded = encodeURIComponent(msg);
+      window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+      showToast('Abrindo WhatsApp para enviar...', 'success');
     }
 
     function downloadComprovantePng() {
@@ -2497,6 +2522,7 @@
           const res = await sendNwcRequest('lookup_invoice', { invoice });
           if (res && (res.settled_at || res.paid)) {
             clearInterval(posWatcherInterval);
+            playCashRegisterSound();
             appState.user.satsBalance = (appState.user.satsBalance || 0) + satsAmount;
             appState.transactions.unshift({
               id: 'tx_' + Date.now(),
@@ -2527,6 +2553,7 @@
 
     function simulatePosPaymentReceived() {
       const val = parseFloat(posCurrentAmountStr) / 100;
+      playCashRegisterSound();
       appState.user.balance += val;
       const desc = (document.getElementById('posDescriptionInput').value || 'Cliente Balcão').trim();
       appState.transactions.unshift({
@@ -2627,17 +2654,25 @@
       });
       appState.fiado.splice(idx, 1);
       saveState();
+      playCashRegisterSound();
       safeConfetti({ particleCount: 90, spread: 60 });
-      speakText(`Baixa efetuada! R$ ${formatMoney(item.amount)} de ${item.name}.`);
+      speakText(`Dinheiro recebido! Baixa efetuada de ${formatMoney(item.amount)} reais.`);
     }
 
     function sendWhatsAppBilling(id) {
       const item = appState.fiado.find(x => x.id === id);
       if (!item) return;
+      const cleanPhone = String(item.phone || '').replace(/\D/g, '');
       const msg = `Olá ${item.name}! Lembrete amigável do Caderninho ZapPix: R$ ${formatMoney(item.amount)} em aberto referente a: ${item.items}. Chave Pix: ${appState.user.pixKey}. Obrigado!`;
       copyToClipboard(msg);
-      speakText('Mensagem de cobrança copiada.');
-      showToast('Mensagem copiada! Cole no WhatsApp.', 'success');
+      speakText('Lembrete de cobrança pronto.');
+      if (cleanPhone.length >= 10) {
+        const phoneWithDDI = cleanPhone.startsWith('55') ? cleanPhone : '55' + cleanPhone;
+        window.open(`https://api.whatsapp.com/send?phone=${phoneWithDDI}&text=${encodeURIComponent(msg)}`, '_blank');
+        showToast('Abrindo WhatsApp para enviar cobrança...', 'success');
+      } else {
+        showToast('Mensagem copiada! Cole no WhatsApp.', 'success');
+      }
     }
 
     /* ============================================================
@@ -2831,13 +2866,45 @@
       if (c) handleScannedQrPayload(c);
     }
 
+    let currentScannerTarget = 'pix'; // 'pix' ou 'nwc'
+
+    function scanNwcQrCode() {
+      currentScannerTarget = 'nwc';
+      closeModal('profileModal');
+      openScannerModal();
+      showToast('Aponte a câmera para o QR Code da sua Carteira Digital', 'info');
+    }
+
     function handleScannedQrPayload(payload) {
       closeScannerModal();
+      const raw = String(payload || '').trim();
+
+      // Reconhecimento inteligente: se for link de carteira NWC ou o usuário clicou para ler carteira
+      if (currentScannerTarget === 'nwc' || raw.startsWith('nostr+walletconnect:') || (raw.includes('relay=') && raw.includes('secret='))) {
+        currentScannerTarget = 'pix';
+        const parsed = parseNwcUrl(raw);
+        if (parsed) {
+          appState.user.nwcUrl = raw;
+          if (parsed.lud16) appState.user.lud16 = parsed.lud16;
+          saveState();
+          nwcParsed = parsed;
+          connectNwcRelay();
+          playCashRegisterSound();
+          safeConfetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+          showToast('⚡ Carteira Digital conectada com sucesso!', 'success');
+          speakText('Carteira digital conectada com sucesso!');
+        } else {
+          showToast('Código de carteira não reconhecido. Tente novamente.', 'error');
+        }
+        return;
+      }
+
+      currentScannerTarget = 'pix';
       openPixModal();
 
       let extracted = null;
       try {
-        const p = String(payload || '').trim();
+        const p = raw;
         // Se for BRCode Pix
         if (p.includes('BR.GOV.BCB.PIX') && p.length > 20) {
           let i = 0;
@@ -2861,8 +2928,8 @@
         }
       } catch (e) {}
 
-      document.getElementById('pixKeyInput').value = extracted || payload;
-      speakText('Código escaneado!');
+      document.getElementById('pixKeyInput').value = extracted || raw;
+      speakText('Código lido com sucesso!');
       goToPixStep2();
     }
 
@@ -3027,6 +3094,42 @@
       ta.select();
       try { document.execCommand('copy'); } catch (e) {}
       document.body.removeChild(ta);
+    }
+
+    function playCashRegisterSound() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        if (ctx.state === 'suspended') ctx.resume();
+        const now = ctx.currentTime;
+
+        // Tom 1: Sinal ascendente suave
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'triangle';
+        osc1.frequency.setValueAtTime(523.25, now); // C5
+        osc1.frequency.exponentialRampToValueAtTime(1046.5, now + 0.12); // C6
+        gain1.gain.setValueAtTime(0.25, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.35);
+
+        // Tom 2: Chime de moedas
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(1318.5, now + 0.08); // E6
+        osc2.frequency.setValueAtTime(1567.98, now + 0.18); // G6
+        gain2.gain.setValueAtTime(0.25, now + 0.08);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.start(now + 0.08);
+        osc2.stop(now + 0.45);
+      } catch(e) {}
     }
 
     function showToast(msg, type = 'info') {
